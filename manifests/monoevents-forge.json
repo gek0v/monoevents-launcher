@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "monoevents-forge-1.20.1",
+  "name": "MonoEvents Evento Principal",
+  "version": "1.2.0",
+  "minecraft": {
+    "version": "1.20.1",
+    "modloader": "forge",
+    "modloaderVersion": "47.4.22",
+    "javaVersion": 17
+  },
+  "changelog": "Añadidos nuevos mobs de Halloween, eventos climáticos y optimizaciones de sincronización de ruleta.",
+  "files": [
+    {
+      "path": "mods/mono_events-1.20.1.jar",
+      "url": "https://github.com/tu-usuario/monoevents-launcher/releases/download/modpack-v1.2.0/mono_events-1.20.1.jar",
+      "sha1": "e2a1b94d50c7657989345c26b5278912ef6c41b8",
+      "size": 6543210,
+      "type": "custom"
+    },
+    {
+      "path": "mods/jei-1.20.1-forge-15.3.0.4.jar",
+      "url": "https://cdn.modrinth.com/data/u6dvdO8v/versions/qK6H023B/jei-1.20.1-forge-15.3.0.4.jar",
+      "sha1": "7c8b1a3d90f2357989345c26b5278912ef6c41c9",
+      "size": 1048576,
+      "type": "modrinth"
+    },
+    {
+      "path": "config/mono_events.toml",
+      "url": "https://raw.githubusercontent.com/tu-usuario/monoevents-launcher/main/configs/mono_events.toml",
+      "sha1": "3d9a1b4e50c7657989345c26b5278912ef6c41d0",
+      "size": 4096,
+      "type": "config"
+    }
+  ]
+}
