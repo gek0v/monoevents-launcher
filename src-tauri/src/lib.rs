@@ -16,7 +16,6 @@ fn update_settings(settings: UserSettings) -> Result<(), String> {
     save_settings(&settings)
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
