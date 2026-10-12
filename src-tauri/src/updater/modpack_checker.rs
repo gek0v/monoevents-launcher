@@ -100,12 +100,35 @@ pub fn evaluate_modpack_delta(
         }
     }
 
-    let version_mismatch = match installed_version {
-        Some(v) => v != manifest.version,
-        None => true,
+    // Resolve installed version: from argument, or read installed_manifest.json from disk
+    let resolved_installed_version: Option<String> = match installed_version {
+        Some(v) => Some(v.to_string()),
+        None => {
+            let manifest_file = instance_dir.join("installed_manifest.json");
+            if manifest_file.exists() {
+                if let Ok(content) = fs::read_to_string(&manifest_file) {
+                    if let Ok(installed) = serde_json::from_str::<ModpackManifest>(&content) {
+                        Some(installed.version)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
     };
 
-    let action = if version_mismatch || !files_to_download.is_empty() || !files_to_delete.is_empty() {
+    let files_complete = files_to_download.is_empty() && files_to_delete.is_empty();
+
+    let version_mismatch = match &resolved_installed_version {
+        Some(v) => v != &manifest.version,
+        None => !files_complete,
+    };
+
+    let action = if version_mismatch || !files_complete {
         UpdateAction::UpdateRequired
     } else {
         UpdateAction::UpToDate
@@ -113,7 +136,7 @@ pub fn evaluate_modpack_delta(
 
     DeltaReport {
         action,
-        current_version: installed_version.map(|v| v.to_string()),
+        current_version: resolved_installed_version,
         target_version: manifest.version.clone(),
         changelog: manifest.changelog.clone(),
         files_to_download,
@@ -168,6 +191,51 @@ mod tests {
         assert_eq!(delta.files_to_download[0].path, "mods/new_mod-1.2.0.jar");
         assert_eq!(delta.files_to_delete.len(), 1);
         assert_eq!(delta.files_to_delete[0], orphan_file);
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_delta_evaluation_up_to_date_when_files_match() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_delta_uptodate");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let mods_dir = temp_dir.join("mods");
+        fs::create_dir_all(&mods_dir).expect("Failed to create mods dir");
+
+        // Write a test mod file with known content and sha1
+        let test_mod_file = mods_dir.join("test_mod.jar");
+        fs::write(&test_mod_file, b"sample jar data").unwrap();
+        let expected_sha1 = crate::downloader::validator::calculate_sha1(&test_mod_file).unwrap();
+
+        let manifest = ModpackManifest {
+            schema_version: Some(1),
+            id: "test-pack".to_string(),
+            name: "Test Modpack".to_string(),
+            version: "1.2.0".to_string(),
+            minecraft: MinecraftConfig {
+                version: "1.20.1".to_string(),
+                modloader: "forge".to_string(),
+                modloader_version: Some("47.4.22".to_string()),
+                java_version: Some(17),
+            },
+            changelog: Some("Test changelog".to_string()),
+            files: vec![ModpackFile {
+                path: "mods/test_mod.jar".to_string(),
+                url: "https://example.com/mod.jar".to_string(),
+                sha1: expected_sha1,
+                size: 15,
+                file_type: "custom".to_string(),
+            }],
+        };
+
+        // Write installed_manifest.json with same version
+        let manifest_json = serde_json::to_string(&manifest).unwrap();
+        fs::write(temp_dir.join("installed_manifest.json"), manifest_json).unwrap();
+
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None);
+        assert_eq!(delta.action, UpdateAction::UpToDate);
+        assert!(delta.files_to_download.is_empty());
+        assert!(delta.files_to_delete.is_empty());
 
         let _ = fs::remove_dir_all(temp_dir);
     }
