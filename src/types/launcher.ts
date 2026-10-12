@@ -59,3 +59,15 @@ export type LauncherStatus =
   | 'DOWNLOADING'
   | 'LAUNCHING'
   | 'RUNNING';
+
+export type UpdateAction = 'UP_TO_DATE' | 'UPDATE_REQUIRED' | 'LAUNCHER_UPDATE_REQUIRED';
+
+export interface DeltaReport {
+  action: UpdateAction;
+  current_version?: string;
+  target_version: string;
+  changelog?: string;
+  files_to_download: ModpackFile[];
+  files_to_delete: string[];
+  total_download_bytes: number;
+}
