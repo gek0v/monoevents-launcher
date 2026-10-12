@@ -188,15 +188,6 @@ pub fn build_jvm_arguments(config: &ForgeLaunchConfig) -> Vec<String> {
         }
     }
 
-    if let Some(parent) = config.instance_dir.parent() {
-        if let Some(game_dir) = parent.parent() {
-            let client_jar = game_dir.join("versions").join("1.20.1").join("1.20.1.jar");
-            if client_jar.exists() {
-                classpath_jars.push(client_jar.to_string_lossy().to_string());
-            }
-        }
-    }
-
     if !classpath_jars.is_empty() {
         args.push("-cp".to_string());
         args.push(classpath_jars.join(";"));
