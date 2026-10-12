@@ -1,0 +1,52 @@
+name: Package & Release Modpack
+
+on:
+  push:
+    tags:
+      - 'modpack-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      modpack_version:
+        description: 'Versión del modpack (ej: 1.2.0)'
+        required: true
+        default: '1.2.0'
+      changelog:
+        description: 'Resumen de cambios'
+        required: false
+        default: 'Actualización general de mods y configuraciones'
+
+permissions:
+  contents: write
+
+jobs:
+  release-modpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Manifest and verify hashes
+        run: |
+          npx ts-node scripts/generate-manifest.ts ./sample-pack ./manifests/monoevents-forge.json
+
+      - name: Create GitHub Release for Modpack
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 'MonoEvents Modpack ${{ github.ref_name }}'
+          body: |
+            ### Actualización de Modpack
+            - Manifiesto oficial y hashes generados.
+            - Compatible con Minecraft 1.20.1 y Forge 47.4.22.
+          files: |
+            manifests/monoevents-forge.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
