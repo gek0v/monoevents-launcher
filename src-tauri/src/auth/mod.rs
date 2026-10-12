@@ -10,7 +10,7 @@ pub enum SessionType {
     Offline,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AuthSession {
     pub session_type: SessionType,
     pub username: String,
