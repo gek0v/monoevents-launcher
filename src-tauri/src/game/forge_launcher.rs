@@ -27,7 +27,7 @@ pub fn build_jvm_arguments(config: &ForgeLaunchConfig) -> Vec<String> {
     // Game directories
     args.push(format!("-Djava.library.path={}", config.instance_dir.join("natives").display()));
     
-    // Main class (Placeholder standard for Forge 1.20.1 bootstrap)
+    // Main class (Standard for Forge 1.20.1 bootstrap)
     args.push("cpw.mods.bootstraplauncher.BootstrapLauncher".to_string());
 
     // Minecraft Client arguments
@@ -43,4 +43,35 @@ pub fn build_jvm_arguments(config: &ForgeLaunchConfig) -> Vec<String> {
     args.push(config.account.access_token.clone().unwrap_or_else(|| "0".to_string()));
 
     args
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_build_jvm_arguments_structure() {
+        let session = AuthSession::new_offline("GekoPlayer");
+        let java_path = PathBuf::from(r"C:\Program Files\Java\bin\java.exe");
+        let instance = PathBuf::from(r"C:\test\instance");
+
+        let config = ForgeLaunchConfig {
+            java_binary: &java_path,
+            ram_gb: 8,
+            instance_dir: &instance,
+            account: &session,
+            forge_version: "47.4.22",
+        };
+
+        let args = build_jvm_arguments(&config);
+
+        assert!(args.contains(&"-Xms2G".to_string()));
+        assert!(args.contains(&"-Xmx8G".to_string()));
+        assert!(args.contains(&"--username".to_string()));
+        assert!(args.contains(&"GekoPlayer".to_string()));
+        assert!(args.contains(&"1.20.1".to_string()));
+        assert!(args.contains(&"--uuid".to_string()));
+        assert_eq!(session.username, "GekoPlayer");
+    }
 }
