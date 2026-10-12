@@ -1,0 +1,20 @@
+# Orca & IDE
+.orca/
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Logs & Minecraft instances
+*.log
+instances/
+runtime/
+cache/
