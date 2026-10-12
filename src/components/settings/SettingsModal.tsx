@@ -10,6 +10,7 @@ import {
   ToggleRight,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useTauriIpc } from '../../hooks/useTauriIpc';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave }) => {
   const { settings, setRam, setGameDirectory, setActiveAccount, setCloseLauncherOnStart } =
     useSettingsStore();
+  const { createOfflineUser } = useTauriIpc();
 
   const [usernameInput, setUsernameInput] = useState(
     settings.active_account?.username || 'GekoPlayer'
@@ -30,12 +32,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    setActiveAccount({
-      session_type: accountType,
-      username: usernameInput.trim() || 'Jugador',
-      uuid: settings.active_account?.uuid || 'offline-default-uuid',
-    });
+  const handleSave = async () => {
+    const trimmed = usernameInput.trim() || 'Jugador';
+    if (accountType === 'offline') {
+      const offlineSession = await createOfflineUser(trimmed);
+      if (offlineSession) {
+        setActiveAccount(offlineSession);
+      }
+    } else {
+      setActiveAccount({
+        session_type: 'microsoft',
+        username: trimmed,
+        uuid: settings.active_account?.uuid || 'ms-pending-auth',
+      });
+    }
     if (onSave) onSave();
     onClose();
   };

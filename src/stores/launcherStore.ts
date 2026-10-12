@@ -21,6 +21,8 @@ interface LauncherState {
   setActiveManifest: (manifest: ModpackManifest | null) => void;
 }
 
+import { DEFAULT_MODPACK } from '../data/defaultModpack';
+
 export const useLauncherStore = create<LauncherState>((set) => ({
   status: 'UPDATE_MODPACK_REQUIRED',
   isSettingsOpen: false,
@@ -29,28 +31,13 @@ export const useLauncherStore = create<LauncherState>((set) => ({
     target_version: '1.2.0',
     current_version: '1.1.0',
     changelog: 'Nuevos mobs de Halloween, eventos climáticos y ruleta global sincronizada.',
-    files_to_download: [],
+    files_to_download: DEFAULT_MODPACK.files,
     files_to_delete: [],
-    total_download_bytes: 48500000,
+    total_download_bytes: DEFAULT_MODPACK.files.reduce((acc, f) => acc + f.size, 0),
   },
   downloadProgress: null,
-  availableModpacks: [
-    {
-      schemaVersion: 1,
-      id: 'monoevents-forge-1.20.1',
-      name: 'MonoEvents Halloween (1.20.1 Forge)',
-      version: '1.2.0',
-      minecraft: {
-        version: '1.20.1',
-        modloader: 'forge',
-        modloaderVersion: '47.4.22',
-        javaVersion: 17,
-      },
-      changelog: 'Actualización oficial con Pikmins de supervivencia y airdrops.',
-      files: [],
-    },
-  ],
-  activeManifest: null,
+  availableModpacks: [DEFAULT_MODPACK],
+  activeManifest: DEFAULT_MODPACK,
   setStatus: (status) => set({ status }),
   setSettingsOpen: (isSettingsOpen) => set({ isSettingsOpen }),
   setDeltaReport: (deltaReport) => set({ deltaReport }),
