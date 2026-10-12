@@ -19,6 +19,15 @@ export function isTauriEnvironment(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
+export async function showErrorMessage(title: string, msg: string) {
+  try {
+    const dialog = await import('@tauri-apps/plugin-dialog');
+    await dialog.message(msg, { title, kind: 'error' });
+  } catch {
+    alert(`${title}: ${msg}`);
+  }
+}
+
 // Safe dynamic invoke wrapper with native error propagation in Tauri and mock fallback in browser
 async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
   try {
@@ -81,8 +90,9 @@ export function useTauriIpc() {
             setStatus('READY');
           } else if (state === 'CRASHED') {
             setStatus('READY');
-            alert(
-              `Minecraft se cerró inesperadamente (Código: ${exit_code ?? 'desconocido'}). Consulta launcher.log en la carpeta de la instancia.`
+            showErrorMessage(
+              'Minecraft Cerrado Inesperadamente',
+              `El juego se cerró (Código: ${exit_code ?? 'desconocido'}). Revisa launcher.log en la carpeta de la instancia.`
             );
           }
         });
@@ -190,7 +200,10 @@ export function useTauriIpc() {
       } catch (err) {
         setStatus('UPDATE_MODPACK_REQUIRED');
         setDownloadProgress(null);
-        alert(`Error en la descarga/sincronización del modpack: ${err instanceof Error ? err.message : String(err)}`);
+        showErrorMessage(
+          'Error de Sincronización',
+          `No se pudo completar la sincronización del modpack: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     },
     [setStatus, setDownloadProgress, checkForUpdates]
@@ -215,7 +228,10 @@ export function useTauriIpc() {
         }
       } catch (err) {
         setStatus('READY');
-        alert(`No se pudo iniciar Minecraft: ${err instanceof Error ? err.message : String(err)}`);
+        showErrorMessage(
+          'Error al Iniciar el Juego',
+          `No se pudo iniciar Minecraft: ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     },
     [setStatus]

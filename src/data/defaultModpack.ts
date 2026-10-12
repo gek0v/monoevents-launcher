@@ -14,25 +14,18 @@ export const DEFAULT_MODPACK: ModpackManifest = {
   changelog: 'Añadidos nuevos mobs de Halloween, eventos climáticos y optimizaciones de sincronización de ruleta.',
   files: [
     {
-      path: 'mods/mono_events-1.20.1.jar',
-      url: 'https://github.com/tu-usuario/monoevents-launcher/releases/download/modpack-v1.2.0/mono_events-1.20.1.jar',
-      sha1: 'e2a1b94d50c7657989345c26b5278912ef6c41b8',
-      size: 6543210,
+      path: 'mods/mono_events-1.0.jar',
+      url: 'https://github.com/monoevents/monoevents-launcher/releases/download/v1.0.0/mono_events-1.0.jar',
+      sha1: '52a075fc3e13938633cdf33976fec032b3a3ca20',
+      size: 4499189,
       type: 'custom',
     },
     {
-      path: 'mods/jei-1.20.1-forge-15.3.0.4.jar',
-      url: 'https://cdn.modrinth.com/data/u6dvdO8v/versions/qK6H023B/jei-1.20.1-forge-15.3.0.4.jar',
-      sha1: '7c8b1a3d90f2357989345c26b5278912ef6c41c9',
-      size: 1048576,
+      path: 'mods/jei-1.20.1-forge-15.0.0.12.jar',
+      url: 'https://cdn.modrinth.com/data/u6dRKJwZ/versions/aVZJ3vwP/jei-1.20.1-forge-15.0.0.12.jar',
+      sha1: '91aa3d030b71728ef4e4d37e520248fd9db7006b',
+      size: 1104584,
       type: 'modrinth',
-    },
-    {
-      path: 'config/mono_events.toml',
-      url: 'https://raw.githubusercontent.com/tu-usuario/monoevents-launcher/main/configs/mono_events.toml',
-      sha1: '3d9a1b4e50c7657989345c26b5278912ef6c41d0',
-      size: 4096,
-      type: 'config',
     },
   ],
 };
