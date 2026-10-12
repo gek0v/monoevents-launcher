@@ -1,107 +1,114 @@
-import React, { useState } from 'react';
-import { Settings, Play, RefreshCw, AlertTriangle, ShieldCheck, HardDrive } from 'lucide-react';
-import type { LauncherStatus } from './types/launcher';
+import React from 'react';
+import { Settings, Sparkles, Flame } from 'lucide-react';
+import { useLauncherStore } from './stores/launcherStore';
+import { useSettingsStore } from './stores/settingsStore';
+import { useTauriIpc } from './hooks/useTauriIpc';
+import { ModpackSelector } from './components/selector/ModpackSelector';
+import { UpdateBanner } from './components/banner/UpdateBanner';
+import { PlayBar } from './components/playbar/PlayBar';
+import { SettingsModal } from './components/settings/SettingsModal';
 
 export default function App() {
-  const [status, setStatus] = useState<LauncherStatus>('UPDATE_MODPACK_REQUIRED');
-  const [selectedModpack] = useState('monoevents-forge-1.20.1');
-  const [ramGb] = useState(6);
+  const { isSettingsOpen, setSettingsOpen, availableModpacks, setStatus } = useLauncherStore();
+  const { settings } = useSettingsStore();
+  const { persistSettings, startModpackSync } = useTauriIpc();
+
+  const currentModpack =
+    availableModpacks.find((m) => m.id === settings.selected_modpack_id) || availableModpacks[0];
+
+  const handleUpdate = () => {
+    if (currentModpack) {
+      startModpackSync(currentModpack, settings.game_directory);
+    }
+  };
+
+  const handlePlay = () => {
+    setStatus('LAUNCHING');
+    setTimeout(() => {
+      setStatus('RUNNING');
+    }, 1500);
+  };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none">
-      {/* Header bar */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
+    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden font-sans">
+      {/* Top Header */}
+      <header className="flex items-center justify-between px-6 py-3.5 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md z-10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-orange-600/30">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-orange-600/30">
             M
           </div>
           <div>
-            <h1 className="text-sm font-semibold tracking-wide text-slate-200">MonoEvents Launcher</h1>
-            <p className="text-xs text-orange-400 font-medium">Halloween Edition • 1.20.1 Forge</p>
+            <h1 className="text-sm font-bold tracking-wide text-white flex items-center gap-1.5">
+              MonoEvents Launcher
+              <span className="text-[10px] uppercase font-bold tracking-widest text-orange-400 bg-orange-950/60 border border-orange-500/30 px-1.5 py-0.2 rounded">
+                Oficial
+              </span>
+            </h1>
+            <p className="text-[11px] text-slate-400 font-medium">Minecraft 1.20.1 • Forge 47.4.22</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/50 text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-slate-300 font-medium">Modpack v1.2.0</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <ModpackSelector />
 
           <button
+            type="button"
             title="Ajustes"
-            className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 hover:text-white transition-colors"
+            onClick={() => setSettingsOpen(true)}
+            className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-sm"
           >
             <Settings className="w-4 h-4" />
           </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-8 flex flex-col justify-between relative overflow-hidden bg-gradient-to-b from-slate-900/40 to-slate-950">
+      {/* Main Showcase Hero */}
+      <main className="flex-1 px-8 py-6 flex flex-col justify-between relative overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-950/20 via-slate-950 to-slate-950">
+        {/* Subtle decorative glow */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
+
         {/* Update Notification Banner */}
-        {status === 'UPDATE_MODPACK_REQUIRED' && (
-          <div className="p-4 rounded-xl border border-orange-500/40 bg-orange-950/30 text-orange-200 flex items-center justify-between shadow-xl">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Actualización obligatoria disponible</p>
-                <p className="text-xs text-orange-300/80">
-                  Hay nuevos mods y ajustes de red. Debes actualizar antes de poder jugar.
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-mono bg-orange-900/50 px-2 py-1 rounded text-orange-300 border border-orange-500/30">
-              v1.2.0 Requerida
-            </span>
-          </div>
-        )}
+        <UpdateBanner />
 
-        {/* Hero Section */}
-        <div className="my-auto max-w-xl">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/20 mb-3">
-            Servidor Oficial
-          </span>
-          <h2 className="text-3xl font-extrabold text-white tracking-tight">
-            Noche de Brujas & Ruleta Global
+        {/* Hero Information */}
+        <div className="my-auto max-w-xl z-0 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm">
+            <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
+            <span>Edición Especial de Halloween</span>
+          </div>
+
+          <h2 className="text-4xl font-black text-white tracking-tight leading-tight">
+            Noche de Brujas, Ruleta & Airdrops
           </h2>
-          <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-            Descubre los nuevos Pikmins elementales, airdrops en combate y la economía de caramelos de temporada.
+
+          <p className="text-sm text-slate-300/90 leading-relaxed max-w-lg">
+            Explora un mundo con eventos climáticos automatizados, ruletas dinámicas con items exclusivos, y tus propios acompañantes Pikmins elementales para supervivencia.
           </p>
-        </div>
 
-        {/* Bottom Play/Update Bar */}
-        <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 bg-slate-950/80">
-          <div className="flex items-center gap-6 text-xs text-slate-400">
-            <div className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-slate-500" />
-              <span>RAM Asignada: <strong className="text-slate-200">{ramGb} GB</strong></span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span>Forge 47.4.22</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {status === 'UPDATE_MODPACK_REQUIRED' ? (
-              <button
-                onClick={() => setStatus('READY')}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-600/30 transition-all hover:scale-105 active:scale-95"
-              >
-                <RefreshCw className="w-4 h-4 animate-spin-reverse" />
-                Actualizar Modpack
-              </button>
-            ) : (
-              <button
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/30 transition-all hover:scale-105 active:scale-95"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                JUGAR
-              </button>
-            )}
+          <div className="flex items-center gap-4 pt-2 text-xs text-slate-400 font-medium">
+            <span className="flex items-center gap-1.5 text-slate-300">
+              <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+              Sincronización delta sin fricción
+            </span>
+            <span className="text-slate-600">•</span>
+            <span>Instalación 100% automatizada</span>
           </div>
         </div>
+
+        {/* Spacer */}
+        <div />
       </main>
+
+      {/* Persistent Play / Update Action Bar */}
+      <PlayBar onPlay={handlePlay} onUpdate={handleUpdate} />
+
+      {/* Interactive Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSave={() => persistSettings(settings)}
+      />
     </div>
   );
 }
