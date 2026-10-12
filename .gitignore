@@ -1,7 +1,8 @@
-# Orca & IDE
+# Orca & IDE & Superpowers
 .orca/
 .idea/
 .vscode/
+.superpowers/
 
 # Node
 node_modules/
