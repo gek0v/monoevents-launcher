@@ -7,10 +7,10 @@ pub mod updater;
 use auth::AuthSession;
 use config::{load_settings, save_settings, UserSettings};
 use downloader::{download_file, DownloadTask};
-use game::find_system_java_17;
+use game::{ensure_instance_structure, find_system_java_17, spawn_minecraft_process, ForgeLaunchConfig};
 use std::path::PathBuf;
 use tauri::Emitter;
-use updater::{evaluate_modpack_delta, DeltaReport, ModpackManifest};
+use updater::{evaluate_modpack_delta, fetch_remote_manifest as fetch_manifest, DeltaReport, ModpackManifest};
 
 #[tauri::command]
 fn get_settings() -> UserSettings {
@@ -34,6 +34,11 @@ fn create_offline_user_session(username: String) -> Result<AuthSession, String> 
         return Err("El nombre de usuario debe tener entre 1 y 16 caracteres".to_string());
     }
     Ok(AuthSession::new_offline(trimmed))
+}
+
+#[tauri::command]
+async fn fetch_remote_manifest(url: String) -> Result<ModpackManifest, String> {
+    fetch_manifest(&url).await
 }
 
 #[tauri::command]
@@ -101,6 +106,30 @@ async fn sync_modpack(
     Ok(())
 }
 
+#[tauri::command]
+fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String> {
+    let settings = load_settings();
+    let java_bin = find_system_java_17()
+        .ok_or("No se encontró Java 17 en el sistema. Por favor instala Temurin/OpenJDK 17.")?;
+
+    let instance_dir = settings.game_directory.join("instances").join(&modpack_id);
+    ensure_instance_structure(&instance_dir)?;
+
+    let account = settings
+        .active_account
+        .unwrap_or_else(|| AuthSession::new_offline("Jugador"));
+
+    let config = ForgeLaunchConfig {
+        java_binary: &java_bin,
+        ram_gb: settings.allocated_ram_gb,
+        instance_dir: &instance_dir,
+        account: &account,
+        forge_version: "47.4.22",
+    };
+
+    spawn_minecraft_process(&config, Some(app))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
@@ -111,8 +140,10 @@ pub fn run() {
             save_user_settings,
             detect_java,
             create_offline_user_session,
+            fetch_remote_manifest,
             check_modpack_delta,
-            sync_modpack
+            sync_modpack,
+            launch_game
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

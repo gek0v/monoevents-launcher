@@ -11,7 +11,7 @@ import { SettingsModal } from './components/settings/SettingsModal';
 export default function App() {
   const { isSettingsOpen, setSettingsOpen, availableModpacks, setStatus } = useLauncherStore();
   const { settings } = useSettingsStore();
-  const { persistSettings, startModpackSync } = useTauriIpc();
+  const { persistSettings, startModpackSync, launchMinecraftGame } = useTauriIpc();
 
   const currentModpack =
     availableModpacks.find((m) => m.id === settings.selected_modpack_id) || availableModpacks[0];
@@ -23,10 +23,9 @@ export default function App() {
   };
 
   const handlePlay = () => {
-    setStatus('LAUNCHING');
-    setTimeout(() => {
-      setStatus('RUNNING');
-    }, 1500);
+    if (currentModpack) {
+      launchMinecraftGame(currentModpack.id);
+    }
   };
 
   return (
