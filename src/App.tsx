@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Settings, Sparkles, Flame } from 'lucide-react';
 import { useLauncherStore } from './stores/launcherStore';
 import { useSettingsStore } from './stores/settingsStore';
@@ -9,16 +9,30 @@ import { PlayBar } from './components/playbar/PlayBar';
 import { SettingsModal } from './components/settings/SettingsModal';
 
 export default function App() {
-  const { isSettingsOpen, setSettingsOpen, availableModpacks, setStatus } = useLauncherStore();
+  const { isSettingsOpen, setSettingsOpen, availableModpacks } = useLauncherStore();
   const { settings } = useSettingsStore();
-  const { persistSettings, startModpackSync, launchMinecraftGame } = useTauriIpc();
+  const { persistSettings, startModpackSync, launchMinecraftGame, checkForUpdates } = useTauriIpc();
 
   const currentModpack =
     availableModpacks.find((m) => m.id === settings.selected_modpack_id) || availableModpacks[0];
 
+  const getInstancePath = (baseDir: string, modpackId: string) => {
+    const clean = baseDir.replace(/[/\\]+$/, '');
+    const sep = clean.includes('\\') ? '\\' : '/';
+    return `${clean}${sep}instances${sep}${modpackId}`;
+  };
+
+  useEffect(() => {
+    if (currentModpack && settings.game_directory) {
+      const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+      checkForUpdates(currentModpack, instancePath);
+    }
+  }, [currentModpack, settings.game_directory, checkForUpdates]);
+
   const handleUpdate = () => {
     if (currentModpack) {
-      startModpackSync(currentModpack, settings.game_directory);
+      const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+      startModpackSync(currentModpack, instancePath);
     }
   };
 
