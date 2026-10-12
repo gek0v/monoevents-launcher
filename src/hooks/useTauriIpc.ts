@@ -1,7 +1,18 @@
 import { useEffect, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useLauncherStore } from '../stores/launcherStore';
-import type { UserSettings, DownloadProgressEvent, DeltaReport, ModpackManifest } from '../types/launcher';
+import type {
+  UserSettings,
+  DownloadProgressEvent,
+  DeltaReport,
+  ModpackManifest,
+} from '../types/launcher';
+
+interface ProcessEvent {
+  state: 'IDLE' | 'LAUNCHING' | 'RUNNING' | 'CRASHED' | 'EXITED';
+  exit_code?: number;
+  crash_report?: string;
+}
 
 // Safe dynamic invoke wrapper that falls back gracefully if running in a standard web browser
 async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
@@ -9,7 +20,7 @@ async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>): Promi
     const tauri = await import('@tauri-apps/api/core');
     return await tauri.invoke<T>(cmd, args);
   } catch (err) {
-    console.warn(`[Tauri IPC] ${cmd} not available or failed:`, err);
+    console.warn(`[Tauri IPC] ${cmd} failed or running in browser:`, err);
     return null;
   }
 }
@@ -35,27 +46,41 @@ export function useTauriIpc() {
     };
   }, [setSettings]);
 
-  // 2. Listen to real-time download progress events
+  // 2. Listen to real-time download-progress and game-status events
   useEffect(() => {
-    let unlistenFn: (() => void) | null = null;
+    let unlistenDownload: (() => void) | null = null;
+    let unlistenGame: (() => void) | null = null;
 
-    async function setupListener() {
+    async function setupListeners() {
       try {
         const { listen } = await import('@tauri-apps/api/event');
-        unlistenFn = await listen<DownloadProgressEvent>('download-progress', (event) => {
+        unlistenDownload = await listen<DownloadProgressEvent>('download-progress', (event) => {
           setDownloadProgress(event.payload);
         });
+
+        unlistenGame = await listen<ProcessEvent>('game-status', (event) => {
+          const { state, exit_code } = event.payload;
+          if (state === 'RUNNING') {
+            setStatus('RUNNING');
+          } else if (state === 'EXITED') {
+            setStatus('READY');
+          } else if (state === 'CRASHED') {
+            setStatus('READY');
+            alert(`Minecraft se cerró inesperadamente (Código de salida: ${exit_code ?? 'desconocido'}). Revisa launcher.log para más detalles.`);
+          }
+        });
       } catch (err) {
-        console.warn('[Tauri Event] Could not listen to download-progress:', err);
+        console.warn('[Tauri Event] Could not setup event listeners:', err);
       }
     }
 
-    setupListener();
+    setupListeners();
 
     return () => {
-      if (unlistenFn) unlistenFn();
+      if (unlistenDownload) unlistenDownload();
+      if (unlistenGame) unlistenGame();
     };
-  }, [setDownloadProgress]);
+  }, [setDownloadProgress, setStatus]);
 
   // 3. Save settings to Rust
   const persistSettings = useCallback(
@@ -65,7 +90,15 @@ export function useTauriIpc() {
     []
   );
 
-  // 4. Check for modpack updates
+  // 4. Fetch remote manifest
+  const fetchRemoteModpack = useCallback(
+    async (url: string): Promise<ModpackManifest | null> => {
+      return await safeInvoke<ModpackManifest>('fetch_remote_manifest', { url });
+    },
+    []
+  );
+
+  // 5. Check for modpack updates
   const checkForUpdates = useCallback(
     async (manifest: ModpackManifest, instancePath: string) => {
       const manifestStr = JSON.stringify(manifest);
@@ -87,7 +120,7 @@ export function useTauriIpc() {
     [setDeltaReport, setStatus]
   );
 
-  // 5. Trigger full sync
+  // 6. Trigger full sync
   const startModpackSync = useCallback(
     async (manifest: ModpackManifest, instancePath: string) => {
       setStatus('DOWNLOADING');
@@ -119,15 +152,35 @@ export function useTauriIpc() {
             setStatus('READY');
             setDownloadProgress(null);
           }
-        }, 200);
+        }, 150);
       }
     },
     [setStatus, setDownloadProgress]
   );
 
+  // 7. Launch game process
+  const launchMinecraftGame = useCallback(
+    async (modpackId: string) => {
+      setStatus('LAUNCHING');
+      const pid = await safeInvoke<number>('launch_game', { modpackId });
+      if (pid) {
+        setStatus('RUNNING');
+      } else {
+        // Fallback for browser preview
+        setTimeout(() => {
+          setStatus('RUNNING');
+          setTimeout(() => setStatus('READY'), 3000);
+        }, 1000);
+      }
+    },
+    [setStatus]
+  );
+
   return {
     persistSettings,
+    fetchRemoteModpack,
     checkForUpdates,
     startModpackSync,
+    launchMinecraftGame,
   };
 }
