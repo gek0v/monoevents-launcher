@@ -11,7 +11,7 @@ export const DEFAULT_MODPACK: ModpackManifest = {
     modloaderVersion: '47.4.22',
     javaVersion: 17,
   },
-  changelog: 'Modpack oficial completo de Halloween: ruletas, airdrops, Pikmins y mods de optimizaciÃ³n.',
+  changelog: 'Modpack oficial completo de Halloween: ruletas, airdrops, Pikmins y mods de optimización.',
   files: [
     {
         "path":  "mods/accessories-neoforge-1.0.0-beta.48+1.20.1.jar",
