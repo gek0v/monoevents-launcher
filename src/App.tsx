@@ -10,7 +10,6 @@ import {
   Mic,
   Gift,
   ShieldCheck,
-  User,
   Terminal,
   Bell,
   Ghost,
@@ -131,8 +130,6 @@ export default function App() {
     }
   };
 
-  const isMicrosoft = settings.active_account?.session_type === 'microsoft';
-
   return (
     <div className="h-screen w-screen bg-slate-950 text-slate-100 select-none overflow-hidden font-sans">
       <BackgroundRotator>
@@ -192,24 +189,6 @@ export default function App() {
           {/* Controls on the right */}
           <div className="flex items-center gap-2.5">
             <ModpackSelector />
-
-            {/* Quick Account Chip */}
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              title="Ajustes de cuenta"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-semibold text-slate-200 transition-all hover:border-orange-500/40 shadow-sm"
-            >
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  isMicrosoft ? 'bg-emerald-400 shadow-sm shadow-emerald-400/80' : 'bg-orange-400'
-                }`}
-              />
-              <User className="w-3.5 h-3.5 text-slate-300" />
-              <span className="max-w-[120px] truncate">
-                {settings.active_account?.username || 'GekoPlayer'}
-              </span>
-            </button>
 
             {/* Shaders & Performance Button */}
             <button
