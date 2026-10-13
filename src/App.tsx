@@ -54,6 +54,7 @@ export default function App() {
     launchMinecraftGame,
     checkServerStatus,
     getGraphicsState,
+    openExternalUrl,
   } = useTauriIpc();
 
   const [copiedIp, setCopiedIp] = useState(false);
@@ -359,7 +360,11 @@ export default function App() {
         </main>
 
         {/* Persistent Action Bar */}
-        <PlayBar onPlay={handlePlay} onUpdate={handleUpdate} />
+        <PlayBar
+          onPlay={handlePlay}
+          onUpdate={handleUpdate}
+          onOpenWeb={() => openExternalUrl('https://mc-gk0.vercel.app')}
+        />
       </BackgroundRotator>
 
       {/* Settings Modal */}
