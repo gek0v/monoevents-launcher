@@ -54,18 +54,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [accountType, setAccountType] = useState<'offline' | 'microsoft'>(
     settings.active_account?.session_type || 'offline'
   );
-  const [customClientIdInput, setCustomClientIdInput] = useState(
-    settings.custom_ms_client_id || ''
-  );
   const [isMicrosoftModalOpen, setIsMicrosoftModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setUsernameInput(settings.active_account?.username || 'GekoPlayer');
       setAccountType(settings.active_account?.session_type || 'offline');
-      setCustomClientIdInput(settings.custom_ms_client_id || '');
     }
-  }, [isOpen, settings.active_account, settings.custom_ms_client_id]);
+  }, [isOpen, settings.active_account]);
 
   if (!isOpen) return null;
 
@@ -76,7 +72,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     const updated = {
       ...useSettingsStore.getState().settings,
       active_account: account,
-      custom_ms_client_id: customClientIdInput.trim() || undefined,
     };
     setSettings(updated);
     await persistSettings(updated);
@@ -107,7 +102,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     const finalSettings = {
       ...currentSettings,
       active_account: updatedAccount,
-      custom_ms_client_id: customClientIdInput.trim() || undefined,
     };
 
     setActiveAccount(updatedAccount);
@@ -313,26 +307,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     </button>
                   </div>
                 )}
-
-                {/* Custom Azure Client ID Configuration */}
-                <div className="pt-3 border-t border-slate-800 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-semibold text-slate-300">
-                      Client ID de Microsoft (Azure)
-                    </label>
-                    <span className="text-[10px] text-slate-400 font-mono">Opcional</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={customClientIdInput}
-                    onChange={(e) => setCustomClientIdInput(e.target.value)}
-                    placeholder="c36a9fb6-4f2a-41ff-90bd-ae7cc92031eb (Por defecto)"
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-emerald-500"
-                  />
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    Para que en la web de Microsoft aparezca <strong>«Mono Launcher»</strong> en vez de «Prism Launcher», puedes registrar una app gratuita en <span className="text-slate-300 font-mono">portal.azure.com</span> y poner aquí su Application ID.
-                  </p>
-                </div>
               </div>
             )}
           </div>

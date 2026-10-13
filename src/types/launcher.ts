@@ -64,7 +64,6 @@ export interface UserSettings {
   game_directory: string;
   active_account?: UserAccount;
   close_launcher_on_start: boolean;
-  custom_ms_client_id?: string;
 }
 
 export interface DownloadProgressEvent {

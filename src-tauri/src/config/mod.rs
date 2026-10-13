@@ -64,7 +64,6 @@ mod tests {
             game_directory: temp_dir.join("instances"),
             active_account: None,
             close_launcher_on_start: false,
-            custom_ms_client_id: None,
         };
 
         save_settings_to_path(&custom_settings, &test_path).expect("Failed to save settings");

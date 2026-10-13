@@ -15,22 +15,14 @@ use updater::{evaluate_modpack_delta, fetch_remote_manifest as fetch_manifest, D
 
 #[tauri::command]
 async fn start_microsoft_device_code() -> Result<DeviceCodeResponse, String> {
-    let settings = load_settings();
     let client = reqwest::Client::new();
-    auth::microsoft::request_device_code(&client, settings.custom_ms_client_id.as_deref()).await
+    auth::microsoft::request_device_code(&client, None).await
 }
 
 #[tauri::command]
 async fn poll_microsoft_device_code(device_code: String) -> Result<AuthSession, String> {
-    let settings = load_settings();
     let client = reqwest::Client::new();
-    auth::microsoft::complete_device_code_flow(
-        &client,
-        &device_code,
-        5,
-        settings.custom_ms_client_id.as_deref(),
-    )
-    .await
+    auth::microsoft::complete_device_code_flow(&client, &device_code, 5, None).await
 }
 
 #[tauri::command]
