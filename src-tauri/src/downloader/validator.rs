@@ -5,9 +5,9 @@ use std::path::Path;
 
 pub fn calculate_sha1(path: &Path) -> Result<String, String> {
     let file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
-    let mut reader = BufReader::new(file);
+    let mut reader = BufReader::with_capacity(65536, file);
     let mut hasher = Sha1::new();
-    let mut buffer = [0u8; 8192];
+    let mut buffer = [0u8; 65536];
 
     loop {
         let count = reader.read(&mut buffer).map_err(|e| format!("Read error: {}", e))?;

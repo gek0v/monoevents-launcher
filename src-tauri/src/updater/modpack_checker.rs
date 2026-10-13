@@ -55,17 +55,31 @@ pub fn evaluate_modpack_delta(
     manifest: &ModpackManifest,
     instance_dir: &Path,
     installed_version: Option<&str>,
+    quick_check: bool,
 ) -> DeltaReport {
     let mut files_to_download = Vec::new();
     let mut total_download_bytes = 0u64;
 
-    // 1. Check which files are missing or have mismatched SHA-1
+    // 1. Check which files are missing or have mismatched size / SHA-1
     for file in &manifest.files {
         // Normalize path for Windows / Unix
         let clean_rel_path = file.path.replace('/', std::path::MAIN_SEPARATOR_STR);
         let target_path = instance_dir.join(&clean_rel_path);
 
-        if !verify_file_sha1(&target_path, &file.sha1) {
+        let is_valid = match fs::metadata(&target_path) {
+            Ok(meta) => {
+                if !meta.is_file() || meta.len() != file.size {
+                    false
+                } else if quick_check {
+                    true
+                } else {
+                    verify_file_sha1(&target_path, &file.sha1)
+                }
+            }
+            Err(_) => false,
+        };
+
+        if !is_valid {
             files_to_download.push(file.clone());
             total_download_bytes += file.size;
         }
@@ -213,7 +227,7 @@ mod tests {
         };
 
         // 1. Initial check (needs download of new_mod and deletion of old_mod)
-        let delta = evaluate_modpack_delta(&manifest, &temp_dir, Some("1.1.0"));
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, Some("1.1.0"), true);
         assert_eq!(delta.action, UpdateAction::UpdateRequired);
         assert_eq!(delta.files_to_download.len(), 1);
         assert_eq!(delta.files_to_download[0].path, "mods/new_mod-1.2.0.jar");
@@ -260,10 +274,66 @@ mod tests {
         let manifest_json = serde_json::to_string(&manifest).unwrap();
         fs::write(temp_dir.join("installed_manifest.json"), manifest_json).unwrap();
 
-        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None);
+        // Test with quick_check = true
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None, true);
         assert_eq!(delta.action, UpdateAction::UpToDate);
         assert!(delta.files_to_download.is_empty());
         assert!(delta.files_to_delete.is_empty());
+
+        // Test with quick_check = false (deep SHA-1 check)
+        let delta_deep = evaluate_modpack_delta(&manifest, &temp_dir, None, false);
+        assert_eq!(delta_deep.action, UpdateAction::UpToDate);
+        assert!(delta_deep.files_to_download.is_empty());
+        assert!(delta_deep.files_to_delete.is_empty());
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_quick_check_detects_deleted_mod() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_delta_deleted");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let mods_dir = temp_dir.join("mods");
+        fs::create_dir_all(&mods_dir).expect("Failed to create mods dir");
+
+        let mod1 = mods_dir.join("mod1.jar");
+        fs::write(&mod1, b"mod 1 content").unwrap();
+
+        let manifest = ModpackManifest {
+            schema_version: Some(1),
+            id: "test-pack".to_string(),
+            name: "Test Modpack".to_string(),
+            version: "1.0.0".to_string(),
+            minecraft: MinecraftConfig {
+                version: "1.20.1".to_string(),
+                modloader: "forge".to_string(),
+                modloader_version: Some("47.4.22".to_string()),
+                java_version: Some(17),
+            },
+            changelog: None,
+            files: vec![
+                ModpackFile {
+                    path: "mods/mod1.jar".to_string(),
+                    url: "https://example.com/mod1.jar".to_string(),
+                    sha1: "abc".to_string(),
+                    size: 13,
+                    file_type: "mod".to_string(),
+                },
+                ModpackFile {
+                    path: "mods/deleted_mod.jar".to_string(),
+                    url: "https://example.com/deleted_mod.jar".to_string(),
+                    sha1: "def".to_string(),
+                    size: 50,
+                    file_type: "mod".to_string(),
+                },
+            ],
+        };
+
+        // deleted_mod.jar does not exist on disk
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, Some("1.0.0"), true);
+        assert_eq!(delta.action, UpdateAction::UpdateRequired);
+        assert_eq!(delta.files_to_download.len(), 1);
+        assert_eq!(delta.files_to_download[0].path, "mods/deleted_mod.jar");
 
         let _ = fs::remove_dir_all(temp_dir);
     }
@@ -300,7 +370,7 @@ mod tests {
             }],
         };
 
-        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None);
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None, true);
         assert_eq!(delta.action, UpdateAction::UpdateRequired);
         assert_eq!(delta.files_to_download.len(), 1);
         assert_eq!(delta.files_to_download[0].path, "resourcepacks/MonoEvents_Halloween.zip");

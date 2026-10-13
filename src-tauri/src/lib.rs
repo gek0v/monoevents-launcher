@@ -74,20 +74,27 @@ fn migrate_legacy_instance_if_needed(target_dir: &std::path::Path) {
 }
 
 #[tauri::command]
-fn check_modpack_delta(
+async fn check_modpack_delta(
     manifest_json: String,
     instance_path: String,
     installed_version: Option<String>,
+    quick_check: Option<bool>,
 ) -> Result<DeltaReport, String> {
-    let manifest: ModpackManifest = serde_json::from_str(&manifest_json)
-        .map_err(|e| format!("Error al analizar el manifiesto: {}", e))?;
-    let path = PathBuf::from(instance_path);
-    migrate_legacy_instance_if_needed(&path);
-    Ok(evaluate_modpack_delta(
-        &manifest,
-        &path,
-        installed_version.as_deref(),
-    ))
+    tokio::task::spawn_blocking(move || {
+        let manifest: ModpackManifest = serde_json::from_str(&manifest_json)
+            .map_err(|e| format!("Error al analizar el manifiesto: {}", e))?;
+        let path = PathBuf::from(instance_path);
+        migrate_legacy_instance_if_needed(&path);
+        let quick = quick_check.unwrap_or(true);
+        Ok(evaluate_modpack_delta(
+            &manifest,
+            &path,
+            installed_version.as_deref(),
+            quick,
+        ))
+    })
+    .await
+    .map_err(|e| format!("Error en verificación de modpack: {}", e))?
 }
 
 #[tauri::command]
@@ -101,7 +108,7 @@ async fn sync_modpack(
     let instance_dir = PathBuf::from(&instance_path);
     migrate_legacy_instance_if_needed(&instance_dir);
 
-    let delta = evaluate_modpack_delta(&manifest, &instance_dir, None);
+    let delta = evaluate_modpack_delta(&manifest, &instance_dir, None, true);
 
     // 1. Delete orphan obsolete files
     for file_to_delete in delta.files_to_delete {
@@ -155,7 +162,7 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
     if manifest_file.exists() {
         if let Ok(content) = std::fs::read_to_string(&manifest_file) {
             if let Ok(installed) = serde_json::from_str::<ModpackManifest>(&content) {
-                let delta = evaluate_modpack_delta(&installed, &instance_dir, None);
+                let delta = evaluate_modpack_delta(&installed, &instance_dir, None, true);
                 if !delta.files_to_download.is_empty() {
                     return Err(format!(
                         "Faltan {} archivo(s) del modpack. Por favor sincroniza antes de jugar.",

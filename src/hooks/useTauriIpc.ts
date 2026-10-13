@@ -162,13 +162,14 @@ export function useTauriIpc() {
 
   // 5. Check for modpack updates
   const checkForUpdates = useCallback(
-    async (manifest: ModpackManifest, instancePath: string) => {
+    async (manifest: ModpackManifest, instancePath: string, quickCheck: boolean = true) => {
       try {
         const manifestStr = JSON.stringify(manifest);
         const report = await safeInvoke<DeltaReport>('check_modpack_delta', {
           manifestJson: manifestStr,
           instancePath,
           installedVersion: null,
+          quickCheck,
         });
 
         if (report) {

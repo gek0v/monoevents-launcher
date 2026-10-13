@@ -82,28 +82,6 @@ export default function App() {
     }
   }, [currentModpack, settings.game_directory, checkForUpdates]);
 
-  // Re-check modpack integrity when window regains focus (e.g. user added/deleted mods in explorer)
-  useEffect(() => {
-    const handleFocus = () => {
-      const { status: currentStatus } = useLauncherStore.getState();
-      if (
-        currentModpack &&
-        settings.game_directory &&
-        currentStatus !== 'DOWNLOADING' &&
-        currentStatus !== 'LAUNCHING' &&
-        currentStatus !== 'RUNNING'
-      ) {
-        const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
-        checkForUpdates(currentModpack, instancePath);
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [currentModpack, settings.game_directory, checkForUpdates]);
-
   useEffect(() => {
     if (currentModpack && settings.game_directory) {
       const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
@@ -148,12 +126,14 @@ export default function App() {
 
       if (report && report.action === 'UPDATE_REQUIRED') {
         // Missing or modified mods detected! Auto-start sync to re-download missing files
-        startModpackSync(currentModpack, instancePath);
+        await startModpackSync(currentModpack, instancePath);
         return;
       }
 
       // Integrity verified, launch Minecraft
-      launchMinecraftGame(currentModpack.id);
+      await launchMinecraftGame(currentModpack.id);
+    } catch (err) {
+      console.error('Error during pre-launch check:', err);
     } finally {
       setIsCheckingBeforePlay(false);
     }
