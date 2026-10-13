@@ -1,14 +1,16 @@
 import { create } from 'zustand';
-import type { UserSettings, UserAccount } from '../types/launcher';
+import type { UserSettings, UserAccount, SystemMemoryInfo } from '../types/launcher';
 
 interface SettingsState {
   settings: UserSettings;
+  systemMemory: SystemMemoryInfo | null;
   setRam: (allocated_ram_gb: number) => void;
   setGameDirectory: (game_directory: string) => void;
   setSelectedModpackId: (selected_modpack_id: string) => void;
   setActiveAccount: (active_account: UserAccount | undefined) => void;
   setCloseLauncherOnStart: (close_launcher_on_start: boolean) => void;
   setSettings: (settings: UserSettings) => void;
+  setSystemMemory: (systemMemory: SystemMemoryInfo) => void;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -23,6 +25,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     },
     close_launcher_on_start: true,
   },
+  systemMemory: null,
   setRam: (allocated_ram_gb) =>
     set((state) => ({ settings: { ...state.settings, allocated_ram_gb } })),
   setGameDirectory: (game_directory) =>
@@ -34,4 +37,5 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCloseLauncherOnStart: (close_launcher_on_start) =>
     set((state) => ({ settings: { ...state.settings, close_launcher_on_start } })),
   setSettings: (settings) => set({ settings }),
+  setSystemMemory: (systemMemory) => set({ systemMemory }),
 }));

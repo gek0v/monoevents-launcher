@@ -1,6 +1,8 @@
 pub mod settings;
+pub mod system_info;
 
 pub use settings::UserSettings;
+pub use system_info::{get_system_memory, SystemMemoryInfo};
 use std::fs;
 use std::path::PathBuf;
 

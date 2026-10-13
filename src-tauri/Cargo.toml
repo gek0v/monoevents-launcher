@@ -29,3 +29,4 @@ md-5 = "0.10"
 keyring = "3.0"
 log = "0.4"
 env_logger = "0.11"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }

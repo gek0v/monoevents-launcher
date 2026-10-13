@@ -120,7 +120,6 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setSettingsOpen(false)}
-        onSave={() => persistSettings(settings)}
       />
     </div>
   );

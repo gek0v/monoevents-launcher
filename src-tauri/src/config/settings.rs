@@ -13,15 +13,25 @@ pub struct UserSettings {
 
 impl UserSettings {
     pub fn sanitize(&mut self) {
-        // Clamp RAM between 2 GB and 32 GB
+        let max_ram = super::get_system_memory().total_ram_gb.max(16);
+        // Clamp RAM between 2 GB and system total physical RAM (at least 16 GB fallback)
         if self.allocated_ram_gb < 2 {
             self.allocated_ram_gb = 2;
-        } else if self.allocated_ram_gb > 32 {
-            self.allocated_ram_gb = 32;
+        } else if self.allocated_ram_gb > max_ram {
+            self.allocated_ram_gb = max_ram;
         }
 
         if self.selected_modpack_id.trim().is_empty() {
             self.selected_modpack_id = "monoevents-forge-1.20.1".to_string();
+        }
+
+        if let Some(ref mut acc) = self.active_account {
+            acc.username = acc.username.trim().to_string();
+            if acc.username.is_empty() {
+                acc.username = "GekoPlayer".to_string();
+            }
+        } else {
+            self.active_account = Some(AuthSession::new_offline("GekoPlayer"));
         }
     }
 }
@@ -33,7 +43,7 @@ impl Default for UserSettings {
             selected_modpack_id: "monoevents-forge-1.20.1".to_string(),
             allocated_ram_gb: 6,
             game_directory: default_dir,
-            active_account: None,
+            active_account: Some(AuthSession::new_offline("GekoPlayer")),
             close_launcher_on_start: true,
         }
     }
@@ -64,9 +74,17 @@ mod tests {
         settings.sanitize();
         assert_eq!(settings.allocated_ram_gb, 2);
         assert_eq!(settings.selected_modpack_id, "monoevents-forge-1.20.1");
+        assert!(settings.active_account.is_some());
+        assert_eq!(settings.active_account.as_ref().unwrap().username, "GekoPlayer");
 
-        settings.allocated_ram_gb = 64; // Too high
+        // Custom nickname preservation and trimming
+        settings.active_account = Some(AuthSession::new_offline("  CustomGamer  "));
         settings.sanitize();
-        assert_eq!(settings.allocated_ram_gb, 32);
+        assert_eq!(settings.active_account.as_ref().unwrap().username, "CustomGamer");
+
+        let max_ram = super::super::get_system_memory().total_ram_gb.max(16);
+        settings.allocated_ram_gb = 1024; // Excessively high
+        settings.sanitize();
+        assert_eq!(settings.allocated_ram_gb, max_ram);
     }
 }
