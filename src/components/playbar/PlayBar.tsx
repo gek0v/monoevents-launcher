@@ -17,9 +17,15 @@ interface PlayBarProps {
   onPlay: () => void;
   onUpdate: () => void;
   onOpenWeb?: () => void;
+  isChecking?: boolean;
 }
 
-export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb }) => {
+export const PlayBar: React.FC<PlayBarProps> = ({
+  onPlay,
+  onUpdate,
+  onOpenWeb,
+  isChecking = false,
+}) => {
   const { status, setSettingsOpen } = useLauncherStore();
   const { settings } = useSettingsStore();
 
@@ -123,6 +129,14 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
           >
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
             En Partida
+          </button>
+        ) : isChecking ? (
+          <button
+            disabled
+            className="flex items-center gap-2.5 px-8 py-3.5 rounded-2xl bg-slate-900 border border-orange-500/40 text-orange-200 font-bold text-sm cursor-not-allowed shadow-xl shadow-black/60 shrink-0"
+          >
+            <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
+            Comprobando archivos...
           </button>
         ) : isReady ? (
           <button

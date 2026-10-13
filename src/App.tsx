@@ -60,6 +60,7 @@ export default function App() {
   const [copiedIp, setCopiedIp] = useState(false);
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [isCheckingBeforePlay, setIsCheckingBeforePlay] = useState(false);
 
   useEffect(() => {
     fetchRemoteNews();
@@ -79,6 +80,28 @@ export default function App() {
       const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
       checkForUpdates(currentModpack, instancePath);
     }
+  }, [currentModpack, settings.game_directory, checkForUpdates]);
+
+  // Re-check modpack integrity when window regains focus (e.g. user added/deleted mods in explorer)
+  useEffect(() => {
+    const handleFocus = () => {
+      const { status: currentStatus } = useLauncherStore.getState();
+      if (
+        currentModpack &&
+        settings.game_directory &&
+        currentStatus !== 'DOWNLOADING' &&
+        currentStatus !== 'LAUNCHING' &&
+        currentStatus !== 'RUNNING'
+      ) {
+        const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+        checkForUpdates(currentModpack, instancePath);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [currentModpack, settings.game_directory, checkForUpdates]);
 
   useEffect(() => {
@@ -115,9 +138,24 @@ export default function App() {
     }
   };
 
-  const handlePlay = () => {
-    if (currentModpack) {
+  const handlePlay = async () => {
+    if (!currentModpack || !settings.game_directory || isCheckingBeforePlay) return;
+
+    setIsCheckingBeforePlay(true);
+    try {
+      const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+      const report = await checkForUpdates(currentModpack, instancePath);
+
+      if (report && report.action === 'UPDATE_REQUIRED') {
+        // Missing or modified mods detected! Auto-start sync to re-download missing files
+        startModpackSync(currentModpack, instancePath);
+        return;
+      }
+
+      // Integrity verified, launch Minecraft
       launchMinecraftGame(currentModpack.id);
+    } finally {
+      setIsCheckingBeforePlay(false);
     }
   };
 
@@ -347,6 +385,7 @@ export default function App() {
           onPlay={handlePlay}
           onUpdate={handleUpdate}
           onOpenWeb={() => openExternalUrl('https://mc-gko.vercel.app')}
+          isChecking={isCheckingBeforePlay}
         />
       </BackgroundRotator>
 

@@ -150,6 +150,22 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
     migrate_legacy_instance_if_needed(&instance_dir);
     ensure_instance_structure(&instance_dir)?;
 
+    // Verify file integrity if installed_manifest.json exists
+    let manifest_file = instance_dir.join("installed_manifest.json");
+    if manifest_file.exists() {
+        if let Ok(content) = std::fs::read_to_string(&manifest_file) {
+            if let Ok(installed) = serde_json::from_str::<ModpackManifest>(&content) {
+                let delta = evaluate_modpack_delta(&installed, &instance_dir, None);
+                if !delta.files_to_download.is_empty() {
+                    return Err(format!(
+                        "Faltan {} archivo(s) del modpack. Por favor sincroniza antes de jugar.",
+                        delta.files_to_download.len()
+                    ));
+                }
+            }
+        }
+    }
+
     let account = settings
         .active_account
         .unwrap_or_else(|| AuthSession::new_offline("GekoPlayer"));
