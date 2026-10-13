@@ -151,3 +151,23 @@ export interface EventFeed {
   rules: RuleCategory[];
 }
 
+export interface ShaderpackInfo {
+  name: string;
+  filename: string;
+  is_active: boolean;
+  size_mb: number;
+}
+
+export type GraphicsPresetType = 'pvp' | 'balanced' | 'ultra' | 'custom';
+
+export interface GraphicsState {
+  active_preset?: GraphicsPresetType | null;
+  active_shader?: string | null;
+  shaders_enabled: boolean;
+  render_distance: number;
+  particles: number;
+  graphics_mode: number;
+  available_shaders: ShaderpackInfo[];
+}
+
+

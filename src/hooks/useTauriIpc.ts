@@ -13,6 +13,7 @@ import type {
   ServerStatus,
   LogEntry,
   CrashReportEvent,
+  GraphicsState,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -417,6 +418,63 @@ export function useTauriIpc() {
     }
   }, []);
 
+  const getGraphicsState = useCallback(async (instancePath: string): Promise<GraphicsState | null> => {
+    try {
+      if (isTauriEnvironment()) {
+        return await safeInvoke<GraphicsState>('get_graphics_state', { instancePath });
+      }
+      return {
+        active_preset: 'balanced',
+        active_shader: 'ComplementaryReimagined.zip',
+        shaders_enabled: true,
+        render_distance: 12,
+        particles: 1,
+        graphics_mode: 1,
+        available_shaders: [
+          { name: 'Complementary Reimagined', filename: 'ComplementaryReimagined.zip', is_active: true, size_mb: 4.8 },
+          { name: 'MakeUp UltraFast', filename: 'MakeUp-UltraFast.zip', is_active: false, size_mb: 2.1 },
+        ],
+      };
+    } catch (err) {
+      console.warn('Error al obtener estado gráfico:', err);
+      return null;
+    }
+  }, []);
+
+  const setActiveShaderpack = useCallback(
+    async (instancePath: string, shaderFilename: string | null): Promise<void> => {
+      try {
+        await safeInvoke('set_active_shaderpack', { instancePath, shaderFilename });
+      } catch (err) {
+        console.warn('Error al cambiar shaderpack:', err);
+      }
+    },
+    []
+  );
+
+  const applyGraphicsPreset = useCallback(
+    async (instancePath: string, presetId: string): Promise<GraphicsState | null> => {
+      try {
+        if (isTauriEnvironment()) {
+          return await safeInvoke<GraphicsState>('apply_graphics_preset', { instancePath, presetId });
+        }
+        return null;
+      } catch (err) {
+        console.warn('Error al aplicar preset gráfico:', err);
+        return null;
+      }
+    },
+    []
+  );
+
+  const openShaderpacksFolder = useCallback(async (instancePath: string): Promise<void> => {
+    try {
+      await safeInvoke('open_shaderpacks_folder', { instancePath });
+    } catch (err) {
+      console.warn('Error al abrir carpeta shaderpacks:', err);
+    }
+  }, []);
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -432,5 +490,9 @@ export function useTauriIpc() {
     pollMicrosoftLogin,
     checkServerStatus,
     updateDiscordRpcStatus,
+    getGraphicsState,
+    setActiveShaderpack,
+    applyGraphicsPreset,
+    openShaderpacksFolder,
   };
 }
