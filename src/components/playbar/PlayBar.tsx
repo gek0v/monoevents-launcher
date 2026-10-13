@@ -148,10 +148,15 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
           <button
             type="button"
             onClick={onPlay}
-            className="group relative flex items-center gap-3 px-10 py-3.5 rounded-xl bg-red-700 hover:bg-red-600 active:bg-red-800 text-white font-extrabold text-sm tracking-wider shadow-xl shadow-red-950/70 transition-all hover:scale-105 active:scale-95 border border-red-500/60"
+            className="group relative flex items-center gap-3 px-10 py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-rose-600 hover:from-orange-500 hover:via-amber-400 hover:to-rose-500 text-white font-black text-sm tracking-widest uppercase shadow-xl shadow-orange-600/40 hover:shadow-2xl hover:shadow-orange-500/60 border border-orange-200/40 hover:border-white/60 transition-all duration-300 hover:scale-105 active:scale-95 active:translate-y-0.5 overflow-hidden"
           >
-            <Play className="w-4 h-4 fill-current group-hover:translate-x-0.5 transition-transform" />
-            <span>JUGAR</span>
+            {/* Dynamic shine sweep overlay */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none"
+            />
+            <Play className="w-4 h-4 fill-current drop-shadow group-hover:scale-110 group-hover:translate-x-0.5 transition-transform" />
+            <span className="relative z-10 drop-shadow-sm">JUGAR</span>
           </button>
         ) : null}
       </div>
