@@ -114,28 +114,28 @@
     <!-- Info Pills Row -->
     <g transform="translate(0, 240)">
       <!-- Pill 1: Forge 1.20.1 -->
-      <rect x="0" y="0" width="180" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+      <rect x="0" y="0" width="136" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
       <g transform="translate(12, 8)" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <!-- Swords mini -->
         <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" transform="scale(0.75)"/>
         <line x1="9.75" x2="14.25" y1="14.25" y2="9.75"/>
       </g>
-      <text x="36" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">79 Mods • Forge 1.20.1</text>
+      <text x="36" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">Forge 1.20.1</text>
 
       <!-- Pill 2: Website -->
-      <rect x="194" y="0" width="170" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
-      <g transform="translate(206, 8)" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="150" y="0" width="170" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+      <g transform="translate(162, 8)" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <!-- Globe mini -->
         <circle cx="9" cy="9" r="8"/>
         <path d="M9 1a11.6 11.6 0 0 0 0 16 11.6 11.6 0 0 0 0-16"/>
         <path d="M1 9h16"/>
       </g>
-      <text x="232" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">mc-gko.vercel.app</text>
+      <text x="188" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">mc-gko.vercel.app</text>
 
       <!-- Pill 3: IP Server -->
-      <rect x="378" y="0" width="170" height="34" rx="12" fill="#ea580c" fill-opacity="0.12" stroke="#ea580c" stroke-width="1" stroke-opacity="0.35"/>
-      <circle cx="394" cy="17" r="4" fill="#34d399"/>
-      <text x="408" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="800" fill="#f8fafc">gek0.duckdns.org</text>
+      <rect x="334" y="0" width="170" height="34" rx="12" fill="#ea580c" fill-opacity="0.12" stroke="#ea580c" stroke-width="1" stroke-opacity="0.35"/>
+      <circle cx="350" cy="17" r="4" fill="#34d399"/>
+      <text x="364" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="800" fill="#f8fafc">gek0.duckdns.org</text>
     </g>
   </g>
 

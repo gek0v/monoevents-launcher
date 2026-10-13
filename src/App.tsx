@@ -298,7 +298,7 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
               <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300">
                 <Package className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
-                <span>79 Mods optimizados</span>
+                <span>Forge 1.20.1</span>
               </div>
               <div className="flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300">
                 <Gift className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
