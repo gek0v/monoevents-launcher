@@ -363,7 +363,7 @@ export default function App() {
         <PlayBar
           onPlay={handlePlay}
           onUpdate={handleUpdate}
-          onOpenWeb={() => openExternalUrl('https://mc-gk0.vercel.app')}
+          onOpenWeb={() => openExternalUrl('https://mc-gko.vercel.app')}
         />
       </BackgroundRotator>
 

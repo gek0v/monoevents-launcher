@@ -75,15 +75,15 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
             if (onOpenWeb) {
               onOpenWeb();
             } else {
-              window.open('https://mc-gk0.vercel.app', '_blank', 'noopener,noreferrer');
+              window.open('https://mc-gko.vercel.app', '_blank', 'noopener,noreferrer');
             }
           }}
-          title="Visitar web oficial de MonoCraft (mc-gk0.vercel.app)"
+          title="Visitar web oficial de MonoCraft (mc-gko.vercel.app)"
           className="flex items-center gap-2 bg-white/[0.04] hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-slate-300 hover:text-orange-300 transition-all group shadow-sm active:scale-95"
         >
           <Globe className="w-3.5 h-3.5 text-orange-400 group-hover:rotate-12 transition-transform duration-300" />
           <span className="font-medium text-[11px] text-slate-300 group-hover:text-orange-200">
-            mc-gk0.vercel.app
+            mc-gko.vercel.app
           </span>
           <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-orange-400 transition-colors" />
         </button>
