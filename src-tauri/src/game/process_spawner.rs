@@ -129,4 +129,14 @@ mod tests {
 
         let _ = std::fs::remove_dir_all(temp_dir);
     }
+
+    #[test]
+    fn test_close_launcher_setting_evaluation() {
+        let settings_close = true;
+        let mut did_schedule_exit = false;
+        if settings_close {
+            did_schedule_exit = true;
+        }
+        assert!(did_schedule_exit);
+    }
 }

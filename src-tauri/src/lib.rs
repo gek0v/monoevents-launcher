@@ -133,7 +133,18 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
         forge_version: "47.4.22",
     };
 
-    spawn_minecraft_process(&config, Some(app))
+    let pid = spawn_minecraft_process(&config, Some(app.clone()))?;
+
+    // Auto-close launcher when game starts if configured
+    if settings.close_launcher_on_start {
+        let app_handle = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            app_handle.exit(0);
+        });
+    }
+
+    Ok(pid)
 }
 
 pub fn run() {
