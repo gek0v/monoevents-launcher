@@ -9,6 +9,12 @@ pub struct UserSettings {
     pub game_directory: PathBuf,
     pub active_account: Option<AuthSession>,
     pub close_launcher_on_start: bool,
+    #[serde(default = "default_true")]
+    pub enable_discord_rpc: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl UserSettings {
@@ -45,6 +51,7 @@ impl Default for UserSettings {
             game_directory: default_dir,
             active_account: Some(AuthSession::new_offline("GekoPlayer")),
             close_launcher_on_start: true,
+            enable_discord_rpc: true,
         }
     }
 }
@@ -69,6 +76,7 @@ mod tests {
             game_directory: PathBuf::from("test"),
             active_account: None,
             close_launcher_on_start: false,
+            enable_discord_rpc: true,
         };
 
         settings.sanitize();

@@ -160,7 +160,24 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
     Ok(pid)
 }
 
+#[tauri::command]
+fn update_discord_rpc_status(enabled: bool) -> Result<(), String> {
+    if enabled {
+        discord::set_activity(discord::DiscordActivityState::InLauncher)
+    } else {
+        discord::clear_activity()
+    }
+}
+
 pub fn run() {
+    // Non-blocking initialization of Discord presence if enabled
+    std::thread::spawn(|| {
+        let settings = config::load_settings();
+        if settings.enable_discord_rpc {
+            let _ = discord::set_activity(discord::DiscordActivityState::InLauncher);
+        }
+    });
+
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -175,6 +192,7 @@ pub fn run() {
             check_modpack_delta,
             sync_modpack,
             launch_game,
+            update_discord_rpc_status,
             system::pick_game_directory,
             system::open_directory_in_explorer,
             system::open_external_url,

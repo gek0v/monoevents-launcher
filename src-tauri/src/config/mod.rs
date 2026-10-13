@@ -64,6 +64,7 @@ mod tests {
             game_directory: temp_dir.join("instances"),
             active_account: None,
             close_launcher_on_start: false,
+            enable_discord_rpc: true,
         };
 
         save_settings_to_path(&custom_settings, &test_path).expect("Failed to save settings");
@@ -72,6 +73,7 @@ mod tests {
         assert_eq!(loaded.selected_modpack_id, "custom-pack");
         assert_eq!(loaded.allocated_ram_gb, 8);
         assert_eq!(loaded.close_launcher_on_start, false);
+        assert_eq!(loaded.enable_discord_rpc, true);
 
         let _ = fs::remove_dir_all(temp_dir);
     }

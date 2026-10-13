@@ -60,6 +60,15 @@ pub fn spawn_minecraft_process(
         );
     }
 
+    // Synchronize Discord RPC activity with game start
+    let settings = crate::config::load_settings();
+    if settings.enable_discord_rpc {
+        let _ = crate::discord::set_activity(crate::discord::DiscordActivityState::InGame {
+            start_timestamp: crate::discord::rpc::current_epoch_seconds(),
+            server_ip: "gek0.duckdns.org".to_string(),
+        });
+    }
+
     // 1. Read stdout line by line
     if let Some(stdout) = child.stdout.take() {
         let app_opt = app_handle.clone();
@@ -158,6 +167,12 @@ pub fn spawn_minecraft_process(
                 );
                 let _ = app.emit("game-crash", crash_event);
             }
+        }
+
+        // Revert Discord activity back to launcher state if enabled
+        let settings = crate::config::load_settings();
+        if settings.enable_discord_rpc {
+            let _ = crate::discord::set_activity(crate::discord::DiscordActivityState::InLauncher);
         }
     });
 
