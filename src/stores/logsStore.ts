@@ -17,6 +17,9 @@ interface LogsState {
   setSearchTerm: (term: string) => void;
   setAutoScroll: (autoScroll: boolean) => void;
   setCrash: (crash: CrashReportEvent | null) => void;
+  isModalOpen: boolean;
+  openModal: () => void;
+  closeModal: () => void;
 }
 
 export const useLogsStore = create<LogsState>((set) => ({
@@ -25,6 +28,7 @@ export const useLogsStore = create<LogsState>((set) => ({
   searchTerm: '',
   autoScroll: true,
   lastCrash: null,
+  isModalOpen: false,
 
   addLog: (entry) =>
     set((state) => {
@@ -44,4 +48,8 @@ export const useLogsStore = create<LogsState>((set) => ({
   setAutoScroll: (autoScroll) => set({ autoScroll }),
 
   setCrash: (lastCrash) => set({ lastCrash }),
+
+  openModal: () => set({ isModalOpen: true }),
+
+  closeModal: () => set({ isModalOpen: false }),
 }));

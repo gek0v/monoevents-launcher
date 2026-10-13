@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useLauncherStore } from '../stores/launcherStore';
+import { useLogsStore } from '../stores/logsStore';
 import type {
   UserSettings,
   UserAccount,
@@ -10,6 +11,8 @@ import type {
   ModpackManifest,
   DeviceCodeResponse,
   ServerStatus,
+  LogEntry,
+  CrashReportEvent,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -78,10 +81,12 @@ export function useTauriIpc() {
     };
   }, [setSettings, setSystemMemory]);
 
-  // 2. Listen to real-time download-progress and game-status events
+  // 2. Listen to real-time download-progress, game-status, game-log and game-crash events
   useEffect(() => {
     let unlistenDownload: (() => void) | null = null;
     let unlistenGame: (() => void) | null = null;
+    let unlistenLogs: (() => void) | null = null;
+    let unlistenCrash: (() => void) | null = null;
 
     async function setupListeners() {
       if (!isTauriEnvironment()) return;
@@ -93,18 +98,23 @@ export function useTauriIpc() {
         });
 
         unlistenGame = await listen<ProcessEvent>('game-status', (event) => {
-          const { state, exit_code } = event.payload;
+          const { state } = event.payload;
           if (state === 'RUNNING') {
             setStatus('RUNNING');
           } else if (state === 'EXITED') {
             setStatus('READY');
           } else if (state === 'CRASHED') {
             setStatus('READY');
-            showErrorMessage(
-              'Minecraft Cerrado Inesperadamente',
-              `El juego se cerró (Código: ${exit_code ?? 'desconocido'}). Revisa launcher.log en la carpeta de la instancia.`
-            );
           }
+        });
+
+        unlistenLogs = await listen<LogEntry>('game-log', (event) => {
+          useLogsStore.getState().addLog(event.payload);
+        });
+
+        unlistenCrash = await listen<CrashReportEvent>('game-crash', (event) => {
+          useLogsStore.getState().setCrash(event.payload);
+          useLogsStore.getState().openModal();
         });
       } catch (err) {
         console.warn('[Tauri Event] No se pudieron registrar los listeners:', err);
@@ -116,6 +126,8 @@ export function useTauriIpc() {
     return () => {
       if (unlistenDownload) unlistenDownload();
       if (unlistenGame) unlistenGame();
+      if (unlistenLogs) unlistenLogs();
+      if (unlistenCrash) unlistenCrash();
     };
   }, [setDownloadProgress, setStatus]);
 

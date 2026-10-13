@@ -11,20 +11,29 @@ import {
   Gift,
   ShieldCheck,
   User,
+  Terminal,
 } from 'lucide-react';
 import { useLauncherStore } from './stores/launcherStore';
 import { useSettingsStore } from './stores/settingsStore';
+import { useLogsStore } from './stores/logsStore';
 import { useTauriIpc } from './hooks/useTauriIpc';
 import { ModpackSelector } from './components/selector/ModpackSelector';
 import { UpdateBanner } from './components/banner/UpdateBanner';
 import { PlayBar } from './components/playbar/PlayBar';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { LogsModal } from './components/logs/LogsModal';
 import { BackgroundRotator } from './components/background/BackgroundRotator';
 import type { ServerStatus } from './types/launcher';
 
 export default function App() {
   const { isSettingsOpen, setSettingsOpen, availableModpacks } = useLauncherStore();
   const { settings } = useSettingsStore();
+  const {
+    isModalOpen: isLogsModalOpen,
+    openModal: openLogsModal,
+    closeModal: closeLogsModal,
+    lastCrash,
+  } = useLogsStore();
   const { checkForUpdates, startModpackSync, launchMinecraftGame, checkServerStatus } = useTauriIpc();
 
   const [copiedIp, setCopiedIp] = useState(false);
@@ -167,6 +176,23 @@ export default function App() {
               </span>
             </button>
 
+            {/* Terminal / Logs Console Button */}
+            <button
+              type="button"
+              title="Consola de Registros y Diagnóstico"
+              onClick={openLogsModal}
+              className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm relative ${
+                lastCrash
+                  ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40 animate-pulse'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <Terminal className="w-4 h-4" />
+              {lastCrash && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border border-slate-950 animate-ping" />
+              )}
+            </button>
+
             {/* Settings Button */}
             <button
               type="button"
@@ -274,6 +300,12 @@ export default function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      {/* Logs and Diagnostic Modal */}
+      <LogsModal
+        isOpen={isLogsModalOpen}
+        onClose={closeLogsModal}
       />
     </div>
   );
