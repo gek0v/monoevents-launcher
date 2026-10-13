@@ -9,6 +9,7 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 1. **Cuenta de Discord verificada:** Se requiere una cuenta con correo verificado (y preferiblemente autenticación en dos pasos - 2FA) para acceder al portal de desarrolladores.
 2. **Recursos Gráficos (Arte Generado Listo en `resources/discord-rpc/`):**
    - **Ícono de la Aplicación (`app_icon.png`):** PNG `512x512` px con el squircle temático de Halloween y el fantasma de Lucide.
+   - **Imagen de Portada / Banner (`cover.png`):** PNG `1024x576` px (16:9) de alta definición con diseño oficial y branding de MonoCraft.
    - **Carátula Principal (`halloween.png`):** PNG `512x512` px con clave `halloween` (`large_image`).
    - **Insignia Secundaria (`forge.png`):** PNG `512x512` px con clave `forge` (`small_image`).
    - **Insignias Opcionales (`flame.png`, `swords.png`):** PNG `512x512` px para eventos y PvP.
@@ -37,12 +38,13 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 
 ---
 
-### Paso 2.2: Obtener el Application ID (Client ID)
+### Paso 2.2: Configurar Icono, Portada y Obtener el Application ID (Client ID)
 
 1. En el menú lateral izquierdo, ve a **General Information**.
 2. Sube el ícono de la aplicación: usa directamente [`resources/discord-rpc/app_icon.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/app_icon.png) en **App Icon**.
-3. Localiza el campo **Application ID** (un número largo de 18 o 19 dígitos).
-4. Haz clic en **Copy**. Guárdate este número; será tu nuevo `DISCORD_CLIENT_ID`.
+3. Sube la portada oficial (Cover Image): usa directamente [`resources/discord-rpc/cover.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/cover.png) (1024x576 px).
+4. Localiza el campo **Application ID** (un número largo de 18 o 19 dígitos).
+5. Haz clic en **Copy**. Guárdate este número; será tu nuevo `DISCORD_CLIENT_ID`.
 
 ---
 

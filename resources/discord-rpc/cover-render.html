@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 1024px;
+      height: 576px;
+      overflow: hidden;
+      background: #030712;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #ffffff;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Ambient background glows */
+    .bg-canvas {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 18% 25%, rgba(234, 88, 12, 0.4) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(225, 29, 72, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(185, 28, 28, 0.3) 0%, transparent 60%),
+        linear-gradient(135deg, #030712 0%, #0b0713 50%, #030712 100%);
+      z-index: 1;
+    }
+
+    /* Grid overlay */
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      z-index: 2;
+    }
+
+    /* Outer border rim */
+    .frame-border {
+      position: absolute;
+      inset: 20px;
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      border-radius: 28px;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Main Container Content */
+    .content {
+      position: relative;
+      z-index: 5;
+      width: 880px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    /* Left Side: Brand & Identity */
+    .brand-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 540px;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(234, 88, 12, 0.18);
+      border: 1px solid rgba(249, 115, 22, 0.45);
+      color: #fb923c;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      width: fit-content;
+      box-shadow: 0 0 15px rgba(234, 88, 12, 0.2);
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-badge {
+      width: 82px;
+      height: 82px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #ea580c 0%, #f59e0b 45%, #e11d48 100%);
+      border: 2px solid rgba(255, 237, 213, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        0 16px 36px -6px rgba(234, 88, 12, 0.65),
+        0 0 25px 2px rgba(249, 115, 22, 0.4);
+      flex-shrink: 0;
+    }
+
+    .logo-badge svg {
+      width: 46px;
+      height: 46px;
+      color: #ffffff;
+    }
+
+    .title-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      background: linear-gradient(135deg, #ffffff 40%, #fdba74 80%, #f97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 24px rgba(234, 88, 12, 0.3);
+    }
+
+    .title-sub {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #fb7185;
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p.description {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.5;
+      max-width: 480px;
+    }
+
+    /* Pills Row */
+    .info-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .info-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 11px;
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+
+    .info-pill svg {
+      width: 14px;
+      height: 14px;
+      color: #fb923c;
+    }
+
+    /* Right Side: Showcase Cards */
+    .showcase-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 280px;
+    }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-icon.red {
+      background: rgba(225, 29, 72, 0.15);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      color: #f43f5e;
+    }
+
+    .card-icon.amber {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #f59e0b;
+    }
+
+    .card-icon.emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+    }
+
+    .card-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .card-info h4 {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .card-info span {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    /* Embers particles simulation */
+    .ember {
+      position: absolute;
+      border-radius: 50%;
+      background: #f97316;
+      box-shadow: 0 0 10px #ea580c, 0 0 20px #f59e0b;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-canvas"></div>
+  <div class="grid-lines"></div>
+  <div class="frame-border"></div>
+
+  <!-- Decorative floating embers -->
+  <div class="ember" style="width: 4px; height: 4px; top: 120px; left: 240px;"></div>
+  <div class="ember" style="width: 6px; height: 6px; top: 380px; left: 180px; opacity: 0.5;"></div>
+  <div class="ember" style="width: 5px; height: 5px; top: 90px; right: 260px;"></div>
+  <div class="ember" style="width: 3px; height: 3px; top: 480px; right: 380px;"></div>
+  <div class="ember" style="width: 4px; height: 4px; top: 220px; right: 120px; opacity: 0.8;"></div>
+
+  <div class="content">
+    <!-- Left Column: Branding -->
+    <div class="brand-section">
+      <div class="pill-badge">
+        <!-- Lucide Flame -->
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+        </svg>
+        <span>Evento Oficial de Halloween</span>
+      </div>
+
+      <div class="title-row">
+        <!-- Lucide Ghost Badge -->
+        <div class="logo-badge">
+          <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.2)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 10h.01"/>
+            <path d="M15 10h.01"/>
+            <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+          </svg>
+        </div>
+
+        <div class="title-text">
+          <h1>MonoCraft</h1>
+          <div class="title-sub">
+            <span>Noche de Sangre</span>
+            <span style="font-size: 14px; opacity: 0.8;">🩸</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="description">
+        Supervivencia extrema con ruletas de la suerte interactivas, eventos climáticos dinámicos, airdrops competitivos y chat de voz de proximidad.
+      </p>
+
+      <div class="info-pills">
+        <div class="info-pill">
+          <!-- Swords -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+            <line x1="13" x2="19" y1="19" y2="13"/>
+            <line x1="16" x2="20" y1="16" y2="20"/>
+            <line x1="19" x2="21" y1="21" y2="19"/>
+            <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+            <line x1="5" x2="9" y1="14" y2="18"/>
+            <line x1="7" x2="4" y1="17" y2="20"/>
+            <line x1="3" x2="5" y1="19" y2="21"/>
+          </svg>
+          <span>79 Mods • Forge 1.20.1</span>
+        </div>
+
+        <div class="info-pill">
+          <!-- Globe -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+            <path d="M2 12h20"/>
+          </svg>
+          <span>mc-gko.vercel.app</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Glassmorphic Feature Cards -->
+    <div class="showcase-cards">
+      <div class="glass-card">
+        <div class="card-icon red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+        </div>
+        <div class="card-info">
+          <h4>Noche de Sangre</h4>
+          <span>Hordas y Eventos Dinámicos</span>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon amber">
+          <!-- Anvil -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 10H6a4 4 0 0 1-4-4 1 1 0 0 1 1-1h4"/>
+            <path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z"/>
+            <path d="M9 12v5"/>
+            <path d="M15 12v5"/>
+            <path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1"/>
+          </svg>
+        </div>
+        <div class="card-info">
+          <h4>Ruleta & Botines</h4>
+          <span>Airdrops de Supervivencia</span>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon emerald">
+          <!-- Mic -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </div>
+        <div class="card-info">
+          <h4>Chat de Proximidad</h4>
+          <span>Voz 3D in-game integrada</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
