@@ -202,6 +202,7 @@ pub fn run() {
             game::shaders::set_active_shaderpack,
             game::shaders::apply_graphics_preset,
             game::shaders::open_shaderpacks_folder,
+            game::shaders::delete_shaderpack,
             game::modrinth::search_modrinth_shaders,
             game::modrinth::download_modrinth_shader
         ])

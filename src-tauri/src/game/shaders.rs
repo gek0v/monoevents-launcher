@@ -372,6 +372,62 @@ pub fn open_shaderpacks_folder(instance_path: String) -> Result<(), String> {
     crate::system::open_directory_in_explorer(shaders_dir.to_string_lossy().to_string())
 }
 
+/// Safely deletes a shaderpack file or directory from `shaderpacks/`.
+/// If the shaderpack was currently active in optionsshaders.txt, it deactivates it.
+pub fn delete_shaderpack_internal(
+    instance_dir: &Path,
+    filename: &str,
+) -> Result<GraphicsState, String> {
+    let clean = filename.trim();
+    if clean.is_empty()
+        || clean.contains('\n')
+        || clean.contains('\r')
+        || clean.contains('/')
+        || clean.contains('\\')
+        || clean.contains("..")
+    {
+        return Err("Nombre de shaderpack inválido o ruta no permitida".to_string());
+    }
+
+    let shaders_dir = instance_dir.join("shaderpacks");
+    let target_path = shaders_dir.join(clean);
+
+    if !target_path.exists() {
+        return Err(format!("El shaderpack '{}' no existe en disco", clean));
+    }
+
+    if target_path.is_dir() {
+        fs::remove_dir_all(&target_path)
+            .map_err(|e| format!("Error al eliminar carpeta de shaderpack: {}", e))?;
+    } else {
+        fs::remove_file(&target_path)
+            .map_err(|e| format!("Error al eliminar archivo de shaderpack: {}", e))?;
+    }
+
+    // If the deleted shader was active in optionsshaders.txt, deactivate it
+    let options_shaders_path = instance_dir.join("optionsshaders.txt");
+    if options_shaders_path.exists() {
+        if let Ok(content) = fs::read_to_string(&options_shaders_path) {
+            if let Some(active) = parse_active_shader(&content) {
+                if active.eq_ignore_ascii_case(clean) {
+                    let _ = set_active_shaderpack_internal(instance_dir, None);
+                }
+            }
+        }
+    }
+
+    get_graphics_state_internal(instance_dir)
+}
+
+#[tauri::command]
+pub fn delete_shaderpack(
+    instance_path: String,
+    filename: String,
+) -> Result<GraphicsState, String> {
+    let path = std::path::PathBuf::from(instance_path);
+    delete_shaderpack_internal(&path, &filename)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -465,6 +521,39 @@ mod tests {
         let scanned = scan_shaderpacks_dir(&temp_dir, None);
         assert_eq!(scanned.len(), 1);
         assert_eq!(scanned[0].filename, "ValidShader.zip");
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_delete_shaderpack_security_and_active_state() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_delete_shaders");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let shaders_dir = temp_dir.join("shaderpacks");
+        fs::create_dir_all(&shaders_dir).unwrap();
+
+        fs::write(shaders_dir.join("BSL.zip"), "dummy bsl").unwrap();
+        fs::write(shaders_dir.join("Complementary.zip"), "dummy complementary").unwrap();
+        fs::write(temp_dir.join("optionsshaders.txt"), "shaderPack=BSL.zip\n").unwrap();
+
+        // 1. Path traversal attempt must be rejected
+        assert!(delete_shaderpack_internal(&temp_dir, "../optionsshaders.txt").is_err());
+        assert!(delete_shaderpack_internal(&temp_dir, "dir/evil.zip").is_err());
+
+        // 2. Delete active shader BSL.zip -> file removed and optionsshaders.txt reset
+        let state = delete_shaderpack_internal(&temp_dir, "BSL.zip").unwrap();
+        assert!(!shaders_dir.join("BSL.zip").exists());
+        assert_eq!(state.active_shader, None);
+        assert_eq!(state.shaders_enabled, false);
+        assert_eq!(state.available_shaders.len(), 1);
+        assert_eq!(state.available_shaders[0].filename, "Complementary.zip");
+
+        let options_shaders = fs::read_to_string(temp_dir.join("optionsshaders.txt")).unwrap();
+        assert_eq!(options_shaders.trim(), "shaderPack=OFF");
+
+        // 3. Delete Complementary.zip
+        let state_after = delete_shaderpack_internal(&temp_dir, "Complementary.zip").unwrap();
+        assert_eq!(state_after.available_shaders.len(), 0);
 
         let _ = fs::remove_dir_all(temp_dir);
     }

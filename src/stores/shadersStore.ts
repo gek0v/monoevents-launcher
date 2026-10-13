@@ -18,6 +18,7 @@ interface ShadersState {
   setIsSearchingOnline: (isSearching: boolean) => void;
   setDownloadingProject: (projectId: string, isDownloading: boolean) => void;
   markShaderInstalled: (projectId: string) => void;
+  markShaderUninstalled: (filename: string) => void;
   setSearchQuery: (query: string) => void;
   setSelectedTierFilter: (filter: 'all' | ShaderPerformanceTier) => void;
 }
@@ -50,6 +51,20 @@ export const useShadersStore = create<ShadersState>((set) => ({
         s.project_id === projectId ? { ...s, is_installed: true } : s
       ),
     })),
+  markShaderUninstalled: (filename) =>
+    set((state) => {
+      const clean = filename.toLowerCase().replace(/[-_.]/g, '');
+      return {
+        onlineShaders: state.onlineShaders.map((s) => {
+          const sSlug = s.slug.toLowerCase().replace(/[-_.]/g, '');
+          const sTitle = s.title.toLowerCase().replace(/[-_.\s]/g, '');
+          if (clean.includes(sSlug) || clean.includes(sTitle) || sSlug.includes(clean)) {
+            return { ...s, is_installed: false };
+          }
+          return s;
+        }),
+      };
+    }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setSelectedTierFilter: (selectedTierFilter) => set({ selectedTierFilter }),
 }));

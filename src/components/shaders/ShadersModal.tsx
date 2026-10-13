@@ -20,6 +20,7 @@ import {
   Loader2,
   Gauge,
   Globe,
+  Trash2,
 } from 'lucide-react';
 import { useShadersStore } from '../../stores/shadersStore';
 import { useTauriIpc } from '../../hooks/useTauriIpc';
@@ -50,6 +51,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
     downloadingProjects,
     setDownloadingProject,
     markShaderInstalled,
+    markShaderUninstalled,
     searchQuery,
     setSearchQuery,
     selectedTierFilter,
@@ -60,6 +62,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
     setActiveShaderpack,
     applyGraphicsPreset,
     openShaderpacksFolder,
+    deleteShaderpack,
     searchModrinthShaders,
     downloadModrinthShader,
   } = useTauriIpc();
@@ -67,6 +70,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>('presets');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [onlineSortBy, setOnlineSortBy] = useState<'downloads' | 'follows' | 'newest'>('downloads');
+  const [deletingShader, setDeletingShader] = useState<string | null>(null);
 
   // Load current graphics state on open
   useEffect(() => {
@@ -156,6 +160,25 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
       showFeedback('Lista de shaders sincronizada con disco');
     }
     setIsLoading(false);
+  };
+
+  const handleDeleteShader = async (filename: string) => {
+    setIsLoading(true);
+    setDeletingShader(null);
+    try {
+      const updated = await deleteShaderpack(instancePath, filename);
+      if (updated) {
+        setGraphicsState(updated);
+        markShaderUninstalled(filename);
+        showFeedback(`Shader "${filename}" eliminado correctamente`);
+      } else {
+        showFeedback(`Error al intentar eliminar "${filename}"`);
+      }
+    } catch {
+      showFeedback(`Error inesperado al eliminar "${filename}"`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDownloadOnlineShader = async (shader: ModrinthShaderCard) => {
@@ -611,6 +634,38 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                               {shader.filename} • {shader.size_mb > 0 ? (shader.size_mb < 1 ? `${shader.size_mb} MB (${Math.round(shader.size_mb * 1024)} KB)` : `${shader.size_mb} MB`) : 'Carpeta'}
                             </span>
                           </div>
+                        </div>
+
+                        {/* Actions (Delete button with inline confirmation) */}
+                        <div
+                          className="flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {deletingShader === shader.filename ? (
+                            <div className="flex items-center gap-1.5 bg-rose-500/15 border border-rose-500/30 px-2 py-1 rounded-xl shadow-inner">
+                              <span className="text-[10px] text-rose-300 font-bold">¿Eliminar?</span>
+                              <button
+                                onClick={() => handleDeleteShader(shader.filename)}
+                                className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-black transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+                              >
+                                Sí
+                              </button>
+                              <button
+                                onClick={() => setDeletingShader(null)}
+                                className="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-slate-300 rounded-lg text-[10px] transition-all cursor-pointer"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeletingShader(shader.filename)}
+                              title="Eliminar shaderpack del disco"
+                              className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer group/trash"
+                            >
+                              <Trash2 className="w-4 h-4 group-hover/trash:scale-110 transition-transform" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

@@ -588,6 +588,29 @@ export function useTauriIpc() {
     []
   );
 
+  const deleteShaderpack = useCallback(
+    async (instancePath: string, filename: string): Promise<GraphicsState | null> => {
+      try {
+        if (isTauriEnvironment()) {
+          return await safeInvoke<GraphicsState>('delete_shaderpack', { instancePath, filename });
+        }
+        return {
+          active_preset: 'custom',
+          active_shader: null,
+          shaders_enabled: false,
+          render_distance: 12,
+          particles: 1,
+          graphics_mode: 1,
+          available_shaders: [],
+        };
+      } catch (err) {
+        console.warn('Error al eliminar shaderpack:', err);
+        return null;
+      }
+    },
+    []
+  );
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -607,6 +630,7 @@ export function useTauriIpc() {
     setActiveShaderpack,
     applyGraphicsPreset,
     openShaderpacksFolder,
+    deleteShaderpack,
     searchModrinthShaders,
     downloadModrinthShader,
   };
