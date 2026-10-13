@@ -100,6 +100,34 @@ pub fn evaluate_modpack_delta(
         }
     }
 
+    // 3. Orphan detection in resourcepacks/ folder
+    let rp_dir = instance_dir.join("resourcepacks");
+    if rp_dir.exists() && rp_dir.is_dir() {
+        if let Ok(entries) = fs::read_dir(&rp_dir) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if entry_path.is_file() {
+                    let is_zip = entry_path
+                        .extension()
+                        .map(|ext| ext.eq_ignore_ascii_case("zip"))
+                        .unwrap_or(false);
+
+                    if is_zip {
+                        let filename = entry_path.file_name().unwrap_or_default().to_string_lossy();
+                        let rel_check = format!("resourcepacks/{}", filename);
+                        let is_in_manifest = manifest.files.iter().any(|f| {
+                            f.path.replace('\\', "/").eq_ignore_ascii_case(&rel_check)
+                        });
+
+                        if !is_in_manifest {
+                            files_to_delete.push(entry_path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Resolve installed version: from argument, or read installed_manifest.json from disk
     let resolved_installed_version: Option<String> = match installed_version {
         Some(v) => Some(v.to_string()),
@@ -236,6 +264,48 @@ mod tests {
         assert_eq!(delta.action, UpdateAction::UpToDate);
         assert!(delta.files_to_download.is_empty());
         assert!(delta.files_to_delete.is_empty());
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_delta_evaluation_resourcepack_download_and_orphan() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_delta_rp");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let rp_dir = temp_dir.join("resourcepacks");
+        fs::create_dir_all(&rp_dir).expect("Failed to create rp dir");
+
+        // Write an orphan resourcepack zip
+        let orphan_rp = rp_dir.join("obsolete_textures.zip");
+        fs::write(&orphan_rp, b"old zip data").unwrap();
+
+        let manifest = ModpackManifest {
+            schema_version: Some(1),
+            id: "test-pack".to_string(),
+            name: "Test Modpack".to_string(),
+            version: "1.0.0".to_string(),
+            minecraft: MinecraftConfig {
+                version: "1.20.1".to_string(),
+                modloader: "forge".to_string(),
+                modloader_version: Some("47.4.22".to_string()),
+                java_version: Some(17),
+            },
+            changelog: None,
+            files: vec![ModpackFile {
+                path: "resourcepacks/MonoEvents_Halloween.zip".to_string(),
+                url: "https://example.com/rp.zip".to_string(),
+                sha1: "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
+                size: 100,
+                file_type: "resourcepack".to_string(),
+            }],
+        };
+
+        let delta = evaluate_modpack_delta(&manifest, &temp_dir, None);
+        assert_eq!(delta.action, UpdateAction::UpdateRequired);
+        assert_eq!(delta.files_to_download.len(), 1);
+        assert_eq!(delta.files_to_download[0].path, "resourcepacks/MonoEvents_Halloween.zip");
+        assert_eq!(delta.files_to_delete.len(), 1);
+        assert_eq!(delta.files_to_delete[0], orphan_rp);
 
         let _ = fs::remove_dir_all(temp_dir);
     }

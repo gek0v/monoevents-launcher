@@ -37,6 +37,7 @@ mod tests {
         assert!(temp_dir.join("mods").exists());
         assert!(temp_dir.join("config").exists());
         assert!(temp_dir.join("logs").exists());
+        assert!(temp_dir.join("resourcepacks").exists());
         assert!(temp_dir.join("natives").exists());
 
         let _ = fs::remove_dir_all(temp_dir);

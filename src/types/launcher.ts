@@ -1,4 +1,4 @@
-export type ModpackFileType = 'custom' | 'modrinth' | 'config';
+export type ModpackFileType = 'custom' | 'modrinth' | 'config' | 'resourcepack';
 
 export interface ModpackFile {
   path: string;
@@ -32,6 +32,12 @@ export interface UserAccount {
   username: string;
   uuid: string;
   access_token?: string;
+}
+
+export interface SystemMemoryInfo {
+  total_ram_gb: number;
+  available_ram_gb: number;
+  recommended_ram_gb: number;
 }
 
 export interface UserSettings {
