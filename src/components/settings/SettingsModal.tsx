@@ -216,11 +216,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <button
                 type="button"
                 title="Abrir en el Explorador de Windows"
+                aria-label="Abrir en el Explorador de Windows"
                 onClick={handleOpenExplorer}
-                className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5"
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center justify-center hover:border-orange-500/40"
               >
-                <ExternalLink className="w-3.5 h-3.5 text-orange-400" />
-                <span className="hidden sm:inline">Explorador</span>
+                <ExternalLink className="w-4 h-4 text-orange-400" />
               </button>
             </div>
           </div>
