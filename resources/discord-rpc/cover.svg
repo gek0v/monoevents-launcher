@@ -165,7 +165,7 @@
       <g transform="translate(36, 41) scale(1.7)" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        <line x1="12" y1="19" y2="22"/>
+        <line x1="12" x2="12" y1="19" y2="22"/>
       </g>
       <text x="108" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#ffffff">Voz Proximidad</text>
       <text x="108" y="75" font-family="system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#94a3b8">Chat 3D Nativo in-game</text>
