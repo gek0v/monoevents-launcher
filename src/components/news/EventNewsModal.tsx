@@ -84,8 +84,12 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/60 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
-              <Flame className="w-5 h-5 animate-pulse" />
+            <div className="w-11 h-11 rounded-2xl overflow-hidden border border-orange-500/30 shadow-lg shadow-orange-500/20 flex-shrink-0 bg-slate-950 flex items-center justify-center">
+              <img
+                src="/monocraft_halloween_logo.svg"
+                alt="MonoCraft Halloween"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">

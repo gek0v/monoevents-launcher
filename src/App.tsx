@@ -138,13 +138,15 @@ export default function App() {
         <header className="flex items-center justify-between px-6 py-3.5 border-b border-white/10 bg-slate-950/60 backdrop-blur-2xl z-30 shadow-lg">
           {/* Logo & Server Identity */}
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 flex items-center justify-center font-black text-white text-lg shadow-xl shadow-orange-600/40 border border-orange-300/30">
-                M
-              </div>
+            <div className="relative group">
+              <img
+                src="/monocraft_halloween_logo.svg"
+                alt="MonoCraft Halloween"
+                className="w-9 h-9 rounded-2xl object-cover shadow-xl shadow-orange-600/30 border border-orange-500/40 group-hover:scale-105 group-hover:border-orange-400/60 transition-all duration-300"
+              />
               <span
-                className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-950 ${
-                  serverStatus?.online ? 'bg-emerald-400' : 'bg-rose-500'
+                className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-950 ${
+                  serverStatus?.online ? 'bg-emerald-400 shadow-sm shadow-emerald-400/80' : 'bg-rose-500 shadow-sm shadow-rose-500/80'
                 }`}
               />
             </div>
