@@ -16,7 +16,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   settings: {
-    selected_modpack_id: 'monoevents-forge-1.20.1',
+    selected_modpack_id: 'monocraft-halloween-1.20.1',
     allocated_ram_gb: 6,
     game_directory: 'C:\\Users\\Usuario\\.monoevents',
     active_account: {

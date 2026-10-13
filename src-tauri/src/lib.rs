@@ -60,6 +60,19 @@ async fn fetch_remote_manifest(url: String) -> Result<ModpackManifest, String> {
     fetch_manifest(&url).await
 }
 
+fn migrate_legacy_instance_if_needed(target_dir: &std::path::Path) {
+    if !target_dir.exists() {
+        if let (Some(parent), Some(name)) = (target_dir.parent(), target_dir.file_name()) {
+            if name == "monocraft-halloween-1.20.1" {
+                let legacy = parent.join("monoevents-forge-1.20.1");
+                if legacy.exists() {
+                    let _ = std::fs::rename(&legacy, target_dir);
+                }
+            }
+        }
+    }
+}
+
 #[tauri::command]
 fn check_modpack_delta(
     manifest_json: String,
@@ -69,6 +82,7 @@ fn check_modpack_delta(
     let manifest: ModpackManifest = serde_json::from_str(&manifest_json)
         .map_err(|e| format!("Error al analizar el manifiesto: {}", e))?;
     let path = PathBuf::from(instance_path);
+    migrate_legacy_instance_if_needed(&path);
     Ok(evaluate_modpack_delta(
         &manifest,
         &path,
@@ -85,6 +99,7 @@ async fn sync_modpack(
     let manifest: ModpackManifest = serde_json::from_str(&manifest_json)
         .map_err(|e| format!("Error al analizar el manifiesto: {}", e))?;
     let instance_dir = PathBuf::from(&instance_path);
+    migrate_legacy_instance_if_needed(&instance_dir);
 
     let delta = evaluate_modpack_delta(&manifest, &instance_dir, None);
 
@@ -132,6 +147,7 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
         .ok_or("No se encontró Java 17 en el sistema. Por favor instala Temurin/OpenJDK 17.")?;
 
     let instance_dir = settings.game_directory.join("instances").join(&modpack_id);
+    migrate_legacy_instance_if_needed(&instance_dir);
     ensure_instance_structure(&instance_dir)?;
 
     let account = settings

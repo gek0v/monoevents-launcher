@@ -27,8 +27,8 @@ impl UserSettings {
             self.allocated_ram_gb = max_ram;
         }
 
-        if self.selected_modpack_id.trim().is_empty() {
-            self.selected_modpack_id = "monoevents-forge-1.20.1".to_string();
+        if self.selected_modpack_id.trim().is_empty() || self.selected_modpack_id == "monoevents-forge-1.20.1" {
+            self.selected_modpack_id = "monocraft-halloween-1.20.1".to_string();
         }
 
         if let Some(ref mut acc) = self.active_account {
@@ -46,7 +46,7 @@ impl Default for UserSettings {
     fn default() -> Self {
         let default_dir = dirs_fallback();
         Self {
-            selected_modpack_id: "monoevents-forge-1.20.1".to_string(),
+            selected_modpack_id: "monocraft-halloween-1.20.1".to_string(),
             allocated_ram_gb: 6,
             game_directory: default_dir,
             active_account: Some(AuthSession::new_offline("GekoPlayer")),
@@ -81,7 +81,7 @@ mod tests {
 
         settings.sanitize();
         assert_eq!(settings.allocated_ram_gb, 2);
-        assert_eq!(settings.selected_modpack_id, "monoevents-forge-1.20.1");
+        assert_eq!(settings.selected_modpack_id, "monocraft-halloween-1.20.1");
         assert!(settings.active_account.is_some());
         assert_eq!(settings.active_account.as_ref().unwrap().username, "GekoPlayer");
 

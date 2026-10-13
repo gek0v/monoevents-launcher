@@ -89,8 +89,8 @@ import type { ModpackManifest } from '../types/launcher';
 
 export const DEFAULT_MODPACK: ModpackManifest = {
   schemaVersion: 1,
-  id: 'monoevents-forge-1.20.1',
-  name: 'MonoEvents Halloween (1.20.1 Forge)',
+  id: 'monocraft-halloween-1.20.1',
+  name: 'MonoCraft Halloween (1.20.1 Forge)',
   version: '1.2.0',
   minecraft: {
     version: '1.20.1',
