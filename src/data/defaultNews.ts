@@ -41,7 +41,7 @@ export const DEFAULT_EVENT_FEED: EventFeed = {
   schedule: [
     {
       id: 'sched-apertura',
-      time: '16 Octubre • 19:00 (España)',
+      time: '16 Octubre • 19:00',
       title: 'Apertura del Servidor',
       description: 'Apertura oficial del servidor MonoCraft. Acceso disponible para todos los jugadores.',
       type: 'opening',
