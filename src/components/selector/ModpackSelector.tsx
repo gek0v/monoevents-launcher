@@ -16,19 +16,21 @@ export const ModpackSelector: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-700/80 text-xs font-semibold text-slate-200 transition-all hover:border-orange-500/50 shadow-sm"
+        className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-semibold text-slate-200 transition-all hover:border-orange-500/50 shadow-sm"
       >
         <Layers className="w-4 h-4 text-orange-400" />
         <span className="max-w-[200px] truncate">{currentModpack?.name || 'Seleccionar Modpack'}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 mt-2 w-72 origin-top-left rounded-xl bg-slate-900 border border-slate-700/80 shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-2.5 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Modpacks Disponibles
+          <div className="absolute left-0 mt-2 w-72 origin-top-left rounded-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/10 shadow-2xl p-2 z-50 animate-fade-in">
+            <div className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Instancias Disponibles
             </div>
             {availableModpacks.map((pack) => {
               const isSelected = pack.id === settings.selected_modpack_id;
@@ -40,14 +42,14 @@ export const ModpackSelector: React.FC = () => {
                     setSelectedModpackId(pack.id);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-colors text-xs ${
+                  className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-colors text-xs ${
                     isSelected
-                      ? 'bg-orange-500/20 text-orange-300 font-semibold'
-                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      ? 'bg-orange-600/20 text-orange-300 font-semibold border border-orange-500/30'
+                      : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
                   }`}
                 >
                   <div>
-                    <p className="font-medium text-slate-200">{pack.name}</p>
+                    <p className="font-semibold text-slate-200">{pack.name}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Minecraft {pack.minecraft.version} • Forge {pack.minecraft.modloaderVersion}
                     </p>
