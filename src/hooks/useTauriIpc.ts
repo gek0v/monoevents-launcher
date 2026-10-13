@@ -15,6 +15,8 @@ import type {
   CrashReportEvent,
   GraphicsState,
   GraphicsPresetType,
+  ShaderpackInfo,
+  ModrinthShaderCard,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -487,6 +489,105 @@ export function useTauriIpc() {
     }
   }, []);
 
+  const searchModrinthShaders = useCallback(
+    async (
+      instancePath: string,
+      query: string,
+      sortBy: string = 'downloads',
+      offset: number = 0,
+      limit: number = 20,
+      gameVersion: string = '1.20.1'
+    ): Promise<ModrinthShaderCard[]> => {
+      try {
+        if (isTauriEnvironment()) {
+          const res = await safeInvoke<ModrinthShaderCard[]>('search_modrinth_shaders', {
+            instancePath,
+            query,
+            sortBy,
+            offset,
+            limit,
+            gameVersion,
+          });
+          return res ?? [];
+        }
+        // Browser fallback mocks for dev
+        return [
+          {
+            project_id: 'izsIPI7a',
+            slug: 'makeup-ultra-fast-shaders',
+            title: 'MakeUp - Ultra Fast',
+            description: 'MakeUp aims to provide the best quality / performance ratio.',
+            author: 'KDXavier',
+            icon_url: 'https://cdn.modrinth.com/data/izsIPI7a/a08432baa86b8ffd58c08f4b3a001ef976ff764d_96.webp',
+            featured_gallery: 'https://cdn.modrinth.com/data/izsIPI7a/images/97776ad4f19f734243dbb301feaf81c327bae96b_350.webp',
+            downloads: 13590000,
+            categories: ['potato', 'low', 'iris'],
+            performance_tier: 'low',
+            is_installed: false,
+          },
+          {
+            project_id: 'R6NEzAwj',
+            slug: 'complementary-reimagined',
+            title: 'Complementary Reimagined',
+            description: 'An exceptional shaderpack tailored for immersive gameplay and style.',
+            author: 'EminGT',
+            icon_url: 'https://cdn.modrinth.com/data/R6NEzAwj/icon.png',
+            featured_gallery: 'https://cdn.modrinth.com/data/R6NEzAwj/images/a5a420ab1668bcfe47a76a812eede7056c45fe31_350.webp',
+            downloads: 18200000,
+            categories: ['medium', 'iris', 'semi-realistic'],
+            performance_tier: 'medium',
+            is_installed: true,
+          },
+          {
+            project_id: 'kmwfVOoi',
+            slug: 'rethinking-voxels',
+            title: 'Rethinking Voxels',
+            description: 'A gameplay shaderpack with coloured block light and sharp shadows.',
+            author: 'gri573',
+            icon_url: 'https://cdn.modrinth.com/data/kmwfVOoi/fc89eadad417dd376b14c3b31e1a2b87acaca034_96.webp',
+            featured_gallery: 'https://cdn.modrinth.com/data/kmwfVOoi/images/c2de214a7981a9b0235b46209507eb9c0b225ddc_350.webp',
+            downloads: 13500000,
+            categories: ['high', 'iris', 'colored-lighting'],
+            performance_tier: 'high',
+            is_installed: false,
+          },
+        ];
+      } catch (err) {
+        console.warn('Error al buscar shaders en Modrinth:', err);
+        return [];
+      }
+    },
+    []
+  );
+
+  const downloadModrinthShader = useCallback(
+    async (
+      instancePath: string,
+      projectId: string,
+      gameVersion: string = '1.20.1'
+    ): Promise<ShaderpackInfo | null> => {
+      try {
+        if (isTauriEnvironment()) {
+          return await safeInvoke<ShaderpackInfo>('download_modrinth_shader', {
+            instancePath,
+            projectId,
+            gameVersion,
+          });
+        }
+        return {
+          name: 'MakeUp-UltraFast-8.8f',
+          filename: 'MakeUp-UltraFast-8.8f.zip',
+          is_active: false,
+          size_mb: 2.1,
+        };
+      } catch (err) {
+        console.warn('Error al descargar shader desde Modrinth:', err);
+        return null;
+      }
+    },
+    []
+  );
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -506,5 +607,7 @@ export function useTauriIpc() {
     setActiveShaderpack,
     applyGraphicsPreset,
     openShaderpacksFolder,
+    searchModrinthShaders,
+    downloadModrinthShader,
   };
 }

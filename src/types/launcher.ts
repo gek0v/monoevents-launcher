@@ -170,4 +170,21 @@ export interface GraphicsState {
   available_shaders: ShaderpackInfo[];
 }
 
+export type ShaderPerformanceTier = 'low' | 'medium' | 'high';
+
+export interface ModrinthShaderCard {
+  project_id: string;
+  slug: string;
+  title: string;
+  description: string;
+  author: string;
+  icon_url: string | null;
+  featured_gallery: string | null;
+  downloads: number;
+  categories: string[];
+  performance_tier: ShaderPerformanceTier;
+  is_installed: boolean;
+}
+
+
 
