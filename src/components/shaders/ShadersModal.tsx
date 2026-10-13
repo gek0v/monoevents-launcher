@@ -15,10 +15,15 @@ import {
   CheckCircle2,
   RefreshCw,
   Info,
+  Search,
+  Download,
+  Loader2,
+  Gauge,
+  Globe,
 } from 'lucide-react';
 import { useShadersStore } from '../../stores/shadersStore';
 import { useTauriIpc } from '../../hooks/useTauriIpc';
-import type { GraphicsPresetType, ShaderpackInfo } from '../../types/launcher';
+import type { GraphicsPresetType, ShaderpackInfo, ModrinthShaderCard } from '../../types/launcher';
 
 interface ShadersModalProps {
   isOpen: boolean;
@@ -33,16 +38,34 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
   onClose,
   instancePath,
 }) => {
-  const { graphicsState, setGraphicsState, isLoading, setIsLoading } = useShadersStore();
+  const {
+    graphicsState,
+    setGraphicsState,
+    isLoading,
+    setIsLoading,
+    onlineShaders,
+    setOnlineShaders,
+    isSearchingOnline,
+    setIsSearchingOnline,
+    downloadingProjects,
+    setDownloadingProject,
+    searchQuery,
+    setSearchQuery,
+    selectedTierFilter,
+    setSelectedTierFilter,
+  } = useShadersStore();
   const {
     getGraphicsState,
     setActiveShaderpack,
     applyGraphicsPreset,
     openShaderpacksFolder,
+    searchModrinthShaders,
+    downloadModrinthShader,
   } = useTauriIpc();
 
   const [activeTab, setActiveTab] = useState<TabType>('presets');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [onlineSortBy, setOnlineSortBy] = useState<'downloads' | 'follows' | 'newest'>('downloads');
 
   // Load current graphics state on open
   useEffect(() => {
@@ -60,6 +83,27 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
       };
     }
   }, [isOpen, instancePath, getGraphicsState, setGraphicsState, setIsLoading]);
+
+  // Debounced search for Modrinth shaders
+  useEffect(() => {
+    if (isOpen && instancePath) {
+      let isMounted = true;
+      setIsSearchingOnline(true);
+      const timer = setTimeout(() => {
+        searchModrinthShaders(instancePath, searchQuery, onlineSortBy, 0, 16, '1.20.1').then((results) => {
+          if (isMounted) {
+            setOnlineShaders(results);
+            setIsSearchingOnline(false);
+          }
+        });
+      }, searchQuery ? 350 : 0);
+
+      return () => {
+        isMounted = false;
+        clearTimeout(timer);
+      };
+    }
+  }, [isOpen, instancePath, searchQuery, onlineSortBy, searchModrinthShaders, setOnlineShaders, setIsSearchingOnline]);
 
   if (!isOpen) return null;
 
@@ -112,6 +156,83 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
     }
     setIsLoading(false);
   };
+
+  const handleDownloadOnlineShader = async (shader: ModrinthShaderCard) => {
+    setDownloadingProject(shader.project_id, true);
+    try {
+      const downloaded = await downloadModrinthShader(instancePath, shader.project_id, '1.20.1');
+      if (downloaded) {
+        const updated = await getGraphicsState(instancePath);
+        if (updated) {
+          setGraphicsState(updated);
+        }
+        setOnlineShaders(
+          onlineShaders.map((s) =>
+            s.project_id === shader.project_id ? { ...s, is_installed: true } : s
+          )
+        );
+        showFeedback(`Shader "${downloaded.filename}" descargado en shaderpacks. ¡Listo para activar!`);
+      } else {
+        showFeedback('Error al descargar el shaderpack de Modrinth');
+      }
+    } catch {
+      showFeedback('Error inesperado durante la descarga');
+    } finally {
+      setDownloadingProject(shader.project_id, false);
+    }
+  };
+
+  const isShaderAlreadyInstalled = (onlineShader: ModrinthShaderCard) => {
+    if (onlineShader.is_installed) return true;
+    const available = graphicsState?.available_shaders ?? [];
+    const slugClean = onlineShader.slug.toLowerCase().replace(/[-_]/g, '');
+    const titleClean = onlineShader.title.toLowerCase().replace(/[-_\s]/g, '');
+    return available.some((s) => {
+      const sClean = s.filename.toLowerCase().replace(/[-_\s]/g, '');
+      return sClean.includes(slugClean) || sClean.includes(titleClean);
+    });
+  };
+
+  const formatDownloads = (count: number) => {
+    if (count >= 1_000_000) {
+      return `${(count / 1_000_000).toFixed(1)}M`;
+    }
+    if (count >= 1_000) {
+      return `${(count / 1_000).toFixed(0)}k`;
+    }
+    return count.toString();
+  };
+
+  const renderTierBadge = (tier: string) => {
+    switch (tier) {
+      case 'low':
+        return (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <Gauge className="w-3 h-3" />
+            🟢 Bajo Consumo (90+ FPS)
+          </span>
+        );
+      case 'high':
+        return (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+            <Flame className="w-3 h-3" />
+            🔴 Alto Consumo (Cinemático)
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            <Zap className="w-3 h-3" />
+            🟡 Equilibrado (60-90 FPS)
+          </span>
+        );
+    }
+  };
+
+  const filteredOnlineShaders = onlineShaders.filter((shader) => {
+    if (selectedTierFilter === 'all') return true;
+    return shader.performance_tier === selectedTierFilter;
+  });
 
   const handleOpenFolder = async () => {
     await openShaderpacksFolder(instancePath);
@@ -506,6 +627,217 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                       <FolderOpen className="w-4 h-4" />
                       <span>Abrir carpeta para arrastrar Shaders (.zip)</span>
                     </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Online Modrinth Catalog & Downloader */}
+              <div className="space-y-3.5 pt-4 border-t border-white/5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                        Explorar & Descargar Nuevos Shaders
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        Catálogo de Modrinth filtrado para Minecraft 1.20.1 Forge (Oculus / Iris)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      API v2 • Modrinth
+                    </span>
+                  </div>
+                </div>
+
+                {/* Search Bar & Sort */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar shaders (ej. Complementary, BSL, MakeUp, Solas, Photon)..."
+                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-colors shadow-inner"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        title="Limpiar búsqueda"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={onlineSortBy}
+                      onChange={(e) => setOnlineSortBy(e.target.value as any)}
+                      className="px-3 py-2 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-amber-500/50 cursor-pointer"
+                    >
+                      <option value="downloads">Más Descargados</option>
+                      <option value="follows">Más Populares</option>
+                      <option value="newest">Más Recientes</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Performance Tier Quick Filters */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                  <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider pr-1">
+                    Consumo:
+                  </span>
+                  <button
+                    onClick={() => setSelectedTierFilter('all')}
+                    className={`px-2.5 py-1 rounded-xl transition-all font-semibold ${
+                      selectedTierFilter === 'all'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                        : 'bg-white/[0.03] text-slate-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    Todos ({onlineShaders.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedTierFilter('low')}
+                    className={`px-2.5 py-1 rounded-xl transition-all font-semibold ${
+                      selectedTierFilter === 'low'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                        : 'bg-white/[0.03] text-slate-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    🟢 Bajo (90+ FPS)
+                  </button>
+                  <button
+                    onClick={() => setSelectedTierFilter('medium')}
+                    className={`px-2.5 py-1 rounded-xl transition-all font-semibold ${
+                      selectedTierFilter === 'medium'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                        : 'bg-white/[0.03] text-slate-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    🟡 Equilibrado (60-90 FPS)
+                  </button>
+                  <button
+                    onClick={() => setSelectedTierFilter('high')}
+                    className={`px-2.5 py-1 rounded-xl transition-all font-semibold ${
+                      selectedTierFilter === 'high'
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                        : 'bg-white/[0.03] text-slate-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    🔴 Alto (Cinemático)
+                  </button>
+                </div>
+
+                {/* Online Cards List */}
+                {isSearchingOnline ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 space-y-2.5 bg-white/[0.01] rounded-2xl border border-white/5">
+                    <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+                    <span className="text-xs">Buscando shaders en Modrinth API...</span>
+                  </div>
+                ) : filteredOnlineShaders.length === 0 ? (
+                  <div className="p-8 text-center bg-white/[0.01] rounded-2xl border border-white/5 space-y-2">
+                    <p className="text-xs text-slate-400">
+                      No se encontraron shaders con los filtros seleccionados.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedTierFilter('all');
+                      }}
+                      className="text-xs text-amber-400 hover:underline font-semibold"
+                    >
+                      Restablecer filtros
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {filteredOnlineShaders.map((shader) => {
+                      const installed = isShaderAlreadyInstalled(shader);
+                      const isDownloading = !!downloadingProjects[shader.project_id];
+
+                      return (
+                        <div
+                          key={shader.project_id}
+                          className="flex flex-col justify-between p-3.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 transition-all space-y-3 group"
+                        >
+                          <div className="flex gap-3">
+                            {/* Image Thumbnail */}
+                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 border border-white/10 flex-shrink-0 relative shadow-inner">
+                              {shader.featured_gallery || shader.icon_url ? (
+                                <img
+                                  src={shader.featured_gallery || shader.icon_url || ''}
+                                  alt={shader.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                  <Layers className="w-6 h-6" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-1.5">
+                                <h5 className="text-xs font-bold text-white truncate group-hover:text-amber-300 transition-colors">
+                                  {shader.title}
+                                </h5>
+                                <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1 flex-shrink-0">
+                                  <Download className="w-3 h-3 text-slate-500" />
+                                  {formatDownloads(shader.downloads)}
+                                </span>
+                              </div>
+
+                              <p className="text-[10px] text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                                {shader.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Footer with Badges and Download Button */}
+                          <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {renderTierBadge(shader.performance_tier)}
+                            </div>
+
+                            <div>
+                              {installed ? (
+                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
+                                  <Check className="w-3 h-3 stroke-[3]" />
+                                  Instalado
+                                </span>
+                              ) : isDownloading ? (
+                                <button
+                                  disabled
+                                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-semibold"
+                                >
+                                  <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                                  <span>Descargando...</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleDownloadOnlineShader(shader)}
+                                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-[11px] font-black transition-all shadow-md shadow-amber-500/20 hover:scale-105 active:scale-95 cursor-pointer"
+                                >
+                                  <Download className="w-3 h-3 stroke-[2.5]" />
+                                  <span>Descargar (.zip)</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
