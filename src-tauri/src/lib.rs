@@ -201,7 +201,9 @@ pub fn run() {
             game::shaders::get_graphics_state,
             game::shaders::set_active_shaderpack,
             game::shaders::apply_graphics_preset,
-            game::shaders::open_shaderpacks_folder
+            game::shaders::open_shaderpacks_folder,
+            game::modrinth::search_modrinth_shaders,
+            game::modrinth::download_modrinth_shader
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -5,6 +5,7 @@ pub mod java_finder;
 pub mod process_monitor;
 pub mod process_spawner;
 pub mod shaders;
+pub mod modrinth;
 
 pub use diagnostics::{
     analyze_crash, create_log_entry, parse_log_level, CrashDiagnostic, CrashReportEvent, LogEntry,
