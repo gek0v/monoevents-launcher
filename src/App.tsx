@@ -13,6 +13,7 @@ import {
   User,
   Terminal,
   Bell,
+  Ghost,
 } from 'lucide-react';
 import { useLauncherStore } from './stores/launcherStore';
 import { useSettingsStore } from './stores/settingsStore';
@@ -139,11 +140,9 @@ export default function App() {
           {/* Logo & Server Identity */}
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <img
-                src="/monocraft_halloween_logo.svg"
-                alt="MonoCraft Halloween"
-                className="w-9 h-9 rounded-2xl object-cover shadow-xl shadow-orange-600/30 border border-orange-500/40 group-hover:scale-105 group-hover:border-orange-400/60 transition-all duration-300"
-              />
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-rose-600 flex items-center justify-center text-white shadow-xl shadow-orange-600/30 border border-orange-400/40 group-hover:scale-105 group-hover:shadow-orange-500/50 transition-all duration-300">
+                <Ghost className="w-5 h-5 text-white drop-shadow-sm group-hover:rotate-6 transition-transform duration-300" />
+              </div>
               <span
                 className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-950 ${
                   serverStatus?.online ? 'bg-emerald-400 shadow-sm shadow-emerald-400/80' : 'bg-rose-500 shadow-sm shadow-rose-500/80'
