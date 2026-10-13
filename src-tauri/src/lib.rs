@@ -148,13 +148,12 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
 
     let pid = spawn_minecraft_process(&config, Some(app.clone()))?;
 
-    // Auto-close launcher when game starts if configured
+    // Hide launcher window when game starts if configured (keeps Discord RPC and crash monitoring alive)
     if settings.close_launcher_on_start {
-        let app_handle = app.clone();
-        std::thread::spawn(move || {
-            std::thread::sleep(std::time::Duration::from_millis(1500));
-            app_handle.exit(0);
-        });
+        use tauri::Manager;
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.hide();
+        }
     }
 
     Ok(pid)

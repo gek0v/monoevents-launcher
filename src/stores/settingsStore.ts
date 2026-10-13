@@ -24,7 +24,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       username: 'GekoPlayer',
       uuid: 'offline-uuid-geko',
     },
-    close_launcher_on_start: true,
+    close_launcher_on_start: false,
     enable_discord_rpc: true,
   },
   systemMemory: null,

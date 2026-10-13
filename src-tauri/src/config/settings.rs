@@ -50,7 +50,7 @@ impl Default for UserSettings {
             allocated_ram_gb: 6,
             game_directory: default_dir,
             active_account: Some(AuthSession::new_offline("GekoPlayer")),
-            close_launcher_on_start: true,
+            close_launcher_on_start: false,
             enable_discord_rpc: true,
         }
     }

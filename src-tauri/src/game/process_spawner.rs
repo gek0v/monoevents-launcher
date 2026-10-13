@@ -134,6 +134,13 @@ pub fn spawn_minecraft_process(
         };
 
         if let Some(app) = handle_clone {
+            // Restore window if it was hidden
+            use tauri::Manager;
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+
             let tail_logs = ring_for_exit
                 .lock()
                 .map(|b| b.clone())

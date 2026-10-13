@@ -62,6 +62,9 @@ impl DiscordIpcClient {
             .map_err(|e| format!("Error al leer respuesta de handshake: {}", e))?;
 
         let length = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
+        if length > 1_000_000 {
+            return Err("Payload de handshake excede el límite de seguridad (1MB)".to_string());
+        }
         let mut response_buf = vec![0u8; length];
         file.read_exact(&mut response_buf)
             .map_err(|e| format!("Error al leer cuerpo de handshake: {}", e))?;
@@ -100,7 +103,9 @@ impl DiscordIpcClient {
                         },
                         "assets": {
                             "large_image": "halloween",
-                            "large_text": "MonoEvents: Noche de Sangre"
+                            "large_text": "MonoEvents: Noche de Sangre",
+                            "small_image": "forge",
+                            "small_text": "Forge 1.20.1"
                         }
                     }
                 },
@@ -232,6 +237,14 @@ mod tests {
         assert_eq!(
             game_payload["args"]["activity"]["timestamps"]["start"],
             1728830000
+        );
+        assert_eq!(
+            game_payload["args"]["activity"]["assets"]["small_image"],
+            "forge"
+        );
+        assert_eq!(
+            game_payload["args"]["activity"]["assets"]["small_text"],
+            "Forge 1.20.1"
         );
     }
 }

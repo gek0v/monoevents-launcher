@@ -24,26 +24,38 @@ export const useNewsStore = create<NewsState>((set, get) => ({
     let activeFeed = DEFAULT_EVENT_FEED;
     const targetUrl = customUrl || DEFAULT_NEWS_ENDPOINT;
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
+    try {
       const response = await fetch(targetUrl, {
         signal: controller.signal,
         headers: { Accept: 'application/json' },
       });
 
-      clearTimeout(timeoutId);
-
       if (response.ok) {
-        const remoteData = (await response.json()) as EventFeed;
-        if (remoteData && Array.isArray(remoteData.articles)) {
-          activeFeed = remoteData;
+        const remoteData = (await response.json()) as Partial<EventFeed>;
+        if (remoteData) {
+          activeFeed = {
+            version: remoteData.version || DEFAULT_EVENT_FEED.version,
+            updatedAt: remoteData.updatedAt || DEFAULT_EVENT_FEED.updatedAt,
+            articles: Array.isArray(remoteData.articles)
+              ? remoteData.articles
+              : DEFAULT_EVENT_FEED.articles,
+            schedule: Array.isArray(remoteData.schedule)
+              ? remoteData.schedule
+              : DEFAULT_EVENT_FEED.schedule,
+            rules: Array.isArray(remoteData.rules)
+              ? remoteData.rules
+              : DEFAULT_EVENT_FEED.rules,
+          };
         }
       }
     } catch {
       // Graceful fallback to DEFAULT_EVENT_FEED if offline, blocked, or timed out
       activeFeed = DEFAULT_EVENT_FEED;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     // Calculate unread count

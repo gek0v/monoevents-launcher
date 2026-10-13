@@ -121,7 +121,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            Novedades ({feed.articles.length})
+            Novedades ({feed.articles?.length ?? 0})
           </button>
 
           <button
@@ -145,7 +145,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
             }`}
           >
             <Calendar className="w-4 h-4" />
-            Cronograma ({feed.schedule.length})
+            Cronograma ({feed.schedule?.length ?? 0})
           </button>
         </div>
 
@@ -157,7 +157,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
             </div>
           ) : activeTab === 'news' ? (
             <div className="space-y-4">
-              {feed.articles.map((article) => (
+              {(feed.articles ?? []).map((article) => (
                 <article
                   key={article.id}
                   className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all space-y-3"
@@ -206,7 +206,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
                 </div>
               </div>
 
-              {feed.rules.map((ruleCat, idx) => (
+              {(feed.rules ?? []).map((ruleCat, idx) => (
                 <div
                   key={idx}
                   className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3"
@@ -216,7 +216,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
                     {ruleCat.category}
                   </h4>
                   <ul className="space-y-2">
-                    {ruleCat.items.map((item, itemIdx) => (
+                    {(ruleCat.items ?? []).map((item, itemIdx) => (
                       <li
                         key={itemIdx}
                         className="flex items-start gap-2.5 text-xs text-slate-300 leading-relaxed"
@@ -231,7 +231,7 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
             </div>
           ) : (
             <div className="space-y-3">
-              {feed.schedule.map((sched) => (
+              {(feed.schedule ?? []).map((sched) => (
                 <div
                   key={sched.id}
                   className="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors"
