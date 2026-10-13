@@ -20,7 +20,7 @@ interface PlayBarProps {
 }
 
 export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb }) => {
-  const { status, downloadProgress, setSettingsOpen } = useLauncherStore();
+  const { status, setSettingsOpen } = useLauncherStore();
   const { settings } = useSettingsStore();
 
   const isDownloading = status === 'DOWNLOADING';
@@ -33,14 +33,14 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
   const isMicrosoft = settings.active_account?.session_type === 'microsoft';
 
   return (
-    <footer className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-white/10 px-8 py-4 flex items-center justify-between relative shadow-2xl shadow-black z-20">
+    <footer className="w-full bg-slate-950/80 backdrop-blur-2xl border-t border-white/10 px-8 py-4 flex items-center justify-between relative shadow-2xl shadow-black z-20 shrink-0 select-none">
       {/* Information badges on the left */}
-      <div className="flex items-center gap-3 text-xs">
+      <div className="flex items-center gap-3 text-xs shrink-0">
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
           title="Ver o cambiar cuenta"
-          className="flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 px-3.5 py-2 rounded-xl transition-all hover:border-orange-500/40 group shadow-sm"
+          className="flex items-center gap-2 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 px-3.5 py-2 rounded-xl transition-all hover:border-orange-500/40 group shadow-sm shrink-0"
         >
           <div
             className={`w-2 h-2 rounded-full ${
@@ -56,14 +56,14 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
           </span>
         </button>
 
-        <div className="hidden md:flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300">
+        <div className="hidden md:flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300 shrink-0 whitespace-nowrap">
           <Cpu className="w-3.5 h-3.5 text-orange-400" />
           <span className="font-medium text-[11px]">
             RAM: <strong className="text-white font-mono">{settings.allocated_ram_gb} GB</strong>
           </span>
         </div>
 
-        <div className="hidden lg:flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300">
+        <div className="hidden lg:flex items-center gap-2 bg-white/[0.04] border border-white/10 px-3 py-2 rounded-xl text-slate-300 shrink-0 whitespace-nowrap">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span className="font-medium text-[11px]">Forge 1.20.1</span>
         </div>
@@ -79,7 +79,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
             }
           }}
           title="Visitar web oficial de MonoCraft (mc-gko.vercel.app)"
-          className="flex items-center gap-2 bg-white/[0.04] hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-slate-300 hover:text-orange-300 transition-all group shadow-sm active:scale-95"
+          className="hidden sm:flex items-center gap-2 bg-white/[0.04] hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/30 px-3 py-2 rounded-xl text-slate-300 hover:text-orange-300 transition-all group shadow-sm active:scale-95 shrink-0 whitespace-nowrap"
         >
           <Globe className="w-3.5 h-3.5 text-orange-400 group-hover:rotate-12 transition-transform duration-300" />
           <span className="font-medium text-[11px] text-slate-300 group-hover:text-orange-200">
@@ -89,28 +89,8 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate, onOpenWeb })
         </button>
       </div>
 
-      {/* Center download progress bar if active */}
-      {isDownloading && downloadProgress && (
-        <div className="flex-1 max-w-md mx-6 flex flex-col gap-1.5 animate-fade-in">
-          <div className="flex items-center justify-between text-[11px] text-slate-200">
-            <span className="truncate max-w-[220px] font-mono text-slate-300">
-              {downloadProgress.current_file}
-            </span>
-            <span className="font-mono text-orange-400 font-bold">
-              {downloadProgress.percentage.toFixed(1)}% ({downloadProgress.speed_mbps.toFixed(2)} MB/s)
-            </span>
-          </div>
-          <div className="w-full h-2.5 bg-black/40 rounded-full overflow-hidden border border-white/15 shadow-inner">
-            <div
-              className="h-full bg-gradient-to-r from-orange-600 via-amber-500 to-orange-400 rounded-full transition-all duration-150 shadow-md shadow-orange-500/50"
-              style={{ width: `${Math.min(100, Math.max(0, downloadProgress.percentage))}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Main Action Button on the right */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         {isDownloading ? (
           <button
             disabled

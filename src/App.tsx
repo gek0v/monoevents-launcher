@@ -23,6 +23,7 @@ import { useTauriIpc } from './hooks/useTauriIpc';
 import { ModpackSelector } from './components/selector/ModpackSelector';
 import { UpdateBanner } from './components/banner/UpdateBanner';
 import { PlayBar } from './components/playbar/PlayBar';
+import { DownloadProgressToast } from './components/download/DownloadProgressToast';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { LogsModal } from './components/logs/LogsModal';
 import { EventNewsModal } from './components/news/EventNewsModal';
@@ -337,6 +338,9 @@ export default function App() {
 
           <div />
         </main>
+
+        {/* Floating Download Progress Toast (Positioned directly above Wallpaper badge) */}
+        <DownloadProgressToast />
 
         {/* Persistent Action Bar */}
         <PlayBar
