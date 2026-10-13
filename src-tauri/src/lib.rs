@@ -197,7 +197,11 @@ pub fn run() {
             system::open_external_url,
             system::check_server_status,
             start_microsoft_device_code,
-            poll_microsoft_device_code
+            poll_microsoft_device_code,
+            game::shaders::get_graphics_state,
+            game::shaders::set_active_shaderpack,
+            game::shaders::apply_graphics_preset,
+            game::shaders::open_shaderpacks_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

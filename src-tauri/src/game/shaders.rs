@@ -167,6 +167,184 @@ pub fn scan_shaderpacks_dir(dir: &Path, active_shader: Option<&str>) -> Vec<Shad
     shaders
 }
 
+/// Reads the current GraphicsState from the given instance directory.
+pub fn get_graphics_state_internal(instance_dir: &Path) -> Result<GraphicsState, String> {
+    let options_shaders_path = instance_dir.join("optionsshaders.txt");
+    let active_shader = if options_shaders_path.exists() {
+        let content = fs::read_to_string(&options_shaders_path)
+            .map_err(|e| format!("Error al leer optionsshaders.txt: {}", e))?;
+        parse_active_shader(&content)
+    } else {
+        None
+    };
+
+    let shaders_dir = instance_dir.join("shaderpacks");
+    let available_shaders = scan_shaderpacks_dir(&shaders_dir, active_shader.as_deref());
+    let shaders_enabled = active_shader.is_some();
+
+    let options_txt_path = instance_dir.join("options.txt");
+    let mut render_distance = 12;
+    let mut particles = 1;
+    let mut graphics_mode = 1;
+
+    if options_txt_path.exists() {
+        if let Ok(content) = fs::read_to_string(&options_txt_path) {
+            for line in content.lines() {
+                let trimmed = line.trim();
+                if let Some(pos) = trimmed.find(':') {
+                    let key = &trimmed[..pos];
+                    let val = &trimmed[pos + 1..];
+                    match key {
+                        "renderDistance" => {
+                            if let Ok(num) = val.parse::<u32>() {
+                                render_distance = num;
+                            }
+                        }
+                        "particles" => {
+                            if let Ok(num) = val.parse::<u32>() {
+                                particles = num;
+                            }
+                        }
+                        "graphicsMode" => {
+                            if let Ok(num) = val.parse::<u32>() {
+                                graphics_mode = num;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    let active_preset = if !shaders_enabled && render_distance <= 8 && particles == 2 {
+        Some("pvp".to_string())
+    } else if shaders_enabled && render_distance == 12 && particles == 1 {
+        Some("balanced".to_string())
+    } else if shaders_enabled && render_distance >= 16 && particles == 0 {
+        Some("ultra".to_string())
+    } else {
+        None
+    };
+
+    Ok(GraphicsState {
+        active_preset,
+        active_shader,
+        shaders_enabled,
+        render_distance,
+        particles,
+        graphics_mode,
+        available_shaders,
+    })
+}
+
+/// Applies a graphics preset ("pvp", "balanced", "ultra") to the instance.
+pub fn apply_preset_internal(instance_dir: &Path, preset_id: &str) -> Result<GraphicsState, String> {
+    if !instance_dir.exists() {
+        fs::create_dir_all(instance_dir)
+            .map_err(|e| format!("Error al crear carpeta de instancia: {}", e))?;
+    }
+
+    let (render_dist, sim_dist, particles, graphics_mode, max_fps, enable_shader) = match preset_id {
+        "pvp" => (8, 6, 2, 0, 144, false),
+        "balanced" => (12, 8, 1, 1, 120, true),
+        "ultra" => (16, 10, 0, 1, 260, true),
+        other => return Err(format!("Preset desconocido: {}", other)),
+    };
+
+    // 1. Update options.txt
+    let options_txt_path = instance_dir.join("options.txt");
+    let original_options = if options_txt_path.exists() {
+        fs::read_to_string(&options_txt_path).unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    let updated_options = update_options_txt(
+        &original_options,
+        render_dist,
+        sim_dist,
+        particles,
+        graphics_mode,
+        max_fps,
+    );
+    fs::write(&options_txt_path, updated_options)
+        .map_err(|e| format!("Error al guardar options.txt: {}", e))?;
+
+    // 2. Update optionsshaders.txt
+    let shaders_dir = instance_dir.join("shaderpacks");
+    let available_shaders = scan_shaderpacks_dir(&shaders_dir, None);
+
+    let target_shader = if enable_shader {
+        let current_shader = if instance_dir.join("optionsshaders.txt").exists() {
+            let c = fs::read_to_string(instance_dir.join("optionsshaders.txt")).unwrap_or_default();
+            parse_active_shader(&c)
+        } else {
+            None
+        };
+
+        current_shader.or_else(|| available_shaders.first().map(|s| s.filename.clone()))
+    } else {
+        None
+    };
+
+    let options_shaders_path = instance_dir.join("optionsshaders.txt");
+    let serialized_shader = serialize_active_shader(target_shader.as_deref());
+    fs::write(&options_shaders_path, serialized_shader)
+        .map_err(|e| format!("Error al guardar optionsshaders.txt: {}", e))?;
+
+    get_graphics_state_internal(instance_dir)
+}
+
+/// Sets or disables active shaderpack in optionsshaders.txt
+pub fn set_active_shaderpack_internal(
+    instance_dir: &Path,
+    shader_filename: Option<&str>,
+) -> Result<(), String> {
+    if !instance_dir.exists() {
+        fs::create_dir_all(instance_dir)
+            .map_err(|e| format!("Error al crear carpeta de instancia: {}", e))?;
+    }
+
+    let options_shaders_path = instance_dir.join("optionsshaders.txt");
+    let serialized = serialize_active_shader(shader_filename);
+    fs::write(&options_shaders_path, serialized)
+        .map_err(|e| format!("Error al guardar optionsshaders.txt: {}", e))
+}
+
+#[tauri::command]
+pub fn get_graphics_state(instance_path: String) -> Result<GraphicsState, String> {
+    let path = std::path::PathBuf::from(instance_path);
+    get_graphics_state_internal(&path)
+}
+
+#[tauri::command]
+pub fn set_active_shaderpack(
+    instance_path: String,
+    shader_filename: Option<String>,
+) -> Result<(), String> {
+    let path = std::path::PathBuf::from(instance_path);
+    set_active_shaderpack_internal(&path, shader_filename.as_deref())
+}
+
+#[tauri::command]
+pub fn apply_graphics_preset(
+    instance_path: String,
+    preset_id: String,
+) -> Result<GraphicsState, String> {
+    let path = std::path::PathBuf::from(instance_path);
+    apply_preset_internal(&path, &preset_id)
+}
+
+#[tauri::command]
+pub fn open_shaderpacks_folder(instance_path: String) -> Result<(), String> {
+    let shaders_dir = std::path::PathBuf::from(instance_path).join("shaderpacks");
+    if !shaders_dir.exists() {
+        let _ = fs::create_dir_all(&shaders_dir);
+    }
+    crate::system::open_directory_in_explorer(shaders_dir.to_string_lossy().to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -216,6 +394,26 @@ mod tests {
         assert_eq!(scanned[1].filename, "ComplementaryReimagined.zip");
         assert_eq!(scanned[1].name, "ComplementaryReimagined");
         assert_eq!(scanned[1].is_active, true);
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_apply_graphics_presets_pvp_balanced_ultra() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_presets");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let state_pvp = apply_preset_internal(&temp_dir, "pvp").unwrap();
+        assert_eq!(state_pvp.render_distance, 8);
+        assert_eq!(state_pvp.shaders_enabled, false);
+        assert_eq!(state_pvp.active_preset.as_deref(), Some("pvp"));
+
+        let options_txt = fs::read_to_string(temp_dir.join("options.txt")).unwrap();
+        assert!(options_txt.contains("renderDistance:8"));
+
+        let options_shaders = fs::read_to_string(temp_dir.join("optionsshaders.txt")).unwrap();
+        assert_eq!(options_shaders.trim(), "shaderPack=OFF");
 
         let _ = fs::remove_dir_all(temp_dir);
     }
