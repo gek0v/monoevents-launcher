@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub const DISCORD_CLIENT_ID: &str = "450485984333660181";
+pub const DISCORD_CLIENT_ID: &str = "1559648130570526895";
 
 /// Encodes a Discord IPC packet: 4 bytes opcode (LE) + 4 bytes payload length (LE) + payload
 pub fn encode_packet(opcode: u32, payload: &str) -> Vec<u8> {

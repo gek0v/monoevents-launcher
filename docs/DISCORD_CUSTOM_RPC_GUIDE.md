@@ -7,13 +7,14 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 ## 1. Requisitos Previos
 
 1. **Cuenta de Discord verificada:** Se requiere una cuenta con correo verificado (y preferiblemente autenticación en dos pasos - 2FA) para acceder al portal de desarrolladores.
-2. **Recursos Gráficos (Arte):**
-   - **Ícono de la Aplicación:** PNG cuadrado de al menos `512x512` px (logo del launcher o icono del servidor).
-   - **Large Image (Carátula Principal):** PNG cuadrado de al menos `512x512` px (ilustración temática de Halloween, luna de sangre o logo principal). Máximo 10 MB.
-   - **Small Image (Insignia Secundaria, opcional):** PNG cuadrado de al menos `128x128` px o `512x512` px (ej. logo de Forge, escudo, o distintivo de evento).
+2. **Recursos Gráficos (Arte Generado Listo en `resources/discord-rpc/`):**
+   - **Ícono de la Aplicación (`app_icon.png`):** PNG `512x512` px con el squircle temático de Halloween y el fantasma de Lucide.
+   - **Carátula Principal (`halloween.png`):** PNG `512x512` px con clave `halloween` (`large_image`).
+   - **Insignia Secundaria (`forge.png`):** PNG `512x512` px con clave `forge` (`small_image`).
+   - **Insignias Opcionales (`flame.png`, `swords.png`):** PNG `512x512` px para eventos y PvP.
 3. **Enlaces Comunitarios (Opcional para Botones):**
    - Enlace permanente de invitación a tu servidor de Discord (`https://discord.gg/...`).
-   - Enlace a la web o panel del evento (`https://...`).
+   - Enlace a la web oficial (`https://mc-gko.vercel.app`).
 
 ---
 
@@ -27,11 +28,11 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 4. **Nombre de la Aplicación (Crítico):**
    - Escribe exactamente el nombre que deseas que aparezca en el estado de Discord:
      ```text
-     MonoEvents: Noche de Sangre
+     MonoCraft: Noche de Sangre
      ```
-   - *Nota:* Discord muestra automáticamente `Jugando a <Nombre de la Aplicación>`. Por lo tanto, si la llamas `MonoEvents: Noche de Sangre`, en Discord aparecerá:  
+   - *Nota:* Discord muestra automáticamente `Jugando a <Nombre de la Aplicación>`. Por lo tanto, si la llamas `MonoCraft: Noche de Sangre`, en Discord aparecerá:  
      > **JUGANDO A**  
-     > **MonoEvents: Noche de Sangre**
+     > **MonoCraft: Noche de Sangre**
 5. Acepta los términos de servicio de Discord y haz clic en **"Create"**.
 
 ---
@@ -39,8 +40,8 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 ### Paso 2.2: Obtener el Application ID (Client ID)
 
 1. En el menú lateral izquierdo, ve a **General Information**.
-2. Sube el ícono de la aplicación en **App Icon** (este icono representará tu aplicación en la lista de desarrollador).
-3. Localiza el campo **Application ID** (un número largo de 18 o 19 dígitos, por ejemplo: `1295058726597791836`).
+2. Sube el ícono de la aplicación: usa directamente [`resources/discord-rpc/app_icon.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/app_icon.png) en **App Icon**.
+3. Localiza el campo **Application ID** (un número largo de 18 o 19 dígitos).
 4. Haz clic en **Copy**. Guárdate este número; será tu nuevo `DISCORD_CLIENT_ID`.
 
 ---
@@ -49,10 +50,11 @@ Esta guía detalla paso a paso los requisitos, recursos y modificaciones de cód
 
 1. En el menú lateral izquierdo, despliega la sección **Rich Presence** y selecciona **Art Assets**.
 2. En la sección **Rich Presence Assets**, haz clic en **Add Image(s)**:
-   - Sube la imagen principal:
-     - **Nombre de clave (Asset Key):** Nómbrala con un alias simple en minúsculas y sin espacios, por ejemplo: `halloween` o `logo_principal`.
-   - Sube la imagen secundaria (insignia de Forge o modo):
-     - **Nombre de clave (Asset Key):** Nómbrala, por ejemplo: `forge_icon`.
+   - Sube la imagen principal: [`resources/discord-rpc/halloween.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/halloween.png)
+     - **Nombre de clave (Asset Key):** Escribe exactamente `halloween`.
+   - Sube la insignia de modloader: [`resources/discord-rpc/forge.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/forge.png)
+     - **Nombre de clave (Asset Key):** Escribe exactamente `forge`.
+   - (Opcional) Sube [`flame.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/flame.png) con clave `flame` y [`swords.png`](file:///C:/Users/Geko/Desktop/HalloweenMC/MonoEvents/launcher/resources/discord-rpc/swords.png) con clave `swords`.
 3. Haz clic en el botón inferior verde: **Save Changes**.
 
 > [!IMPORTANT]

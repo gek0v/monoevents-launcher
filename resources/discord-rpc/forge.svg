@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="forgeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="anvilStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="64" y="64" width="896" height="896" rx="200" ry="200" fill="url(#forgeBg)" stroke="#fb923c" stroke-width="24" stroke-opacity="0.5"/>
+
+  <!-- Lucide Anvil Scaled to Center (512x512 box at 256, 256) -->
+  <g transform="translate(256, 256) scale(21.333333)" stroke="url(#anvilStroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 10H6a4 4 0 0 1-4-4 1 1 0 0 1 1-1h4" fill="none"/>
+    <path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z" fill="rgba(251, 146, 60, 0.2)"/>
+    <path d="M9 12v5" fill="none"/>
+    <path d="M15 12v5" fill="none"/>
+    <path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1" fill="rgba(251, 146, 60, 0.2)"/>
+  </g>
+</svg>

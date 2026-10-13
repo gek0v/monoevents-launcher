@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="swordsBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#581c87"/>
+      <stop offset="50%" stop-color="#991b1b"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="64" y="64" width="896" height="896" rx="200" ry="200" fill="url(#swordsBg)" stroke="#e9d5ff" stroke-width="24" stroke-opacity="0.35"/>
+
+  <!-- Lucide Swords Scaled to Center (512x512 box at 256, 256) -->
+  <g transform="translate(256, 256) scale(21.333333)" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+    <line x1="13" x2="19" y1="19" y2="13"/>
+    <line x1="16" x2="20" y1="16" y2="20"/>
+    <line x1="19" x2="21" y1="21" y2="19"/>
+    <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+    <line x1="5" x2="9" y1="14" y2="18"/>
+    <line x1="7" x2="4" y1="17" y2="20"/>
+    <line x1="3" x2="5" y1="19" y2="21"/>
+  </g>
+</svg>
