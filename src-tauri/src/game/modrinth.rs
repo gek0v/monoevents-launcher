@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
+use sha1::{Digest, Sha1};
 use std::fs;
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
-use crate::downloader::validator::calculate_sha1;
 use crate::game::shaders::{scan_shaderpacks_dir, ShaderpackInfo};
 
 const MODRINTH_API_BASE: &str = "https://api.modrinth.com/v2";
@@ -94,7 +94,8 @@ pub fn calculate_performance_tier(categories: &[String], title: &str, desc: &str
     if lower_title.contains("fast")
         || lower_title.contains("lite")
         || lower_title.contains("potato")
-        || lower_title.contains("tea")
+        || lower_title.split_whitespace().any(|w| w == "tea")
+        || lower_title.contains("tea shaders")
         || lower_desc.contains("best performance")
         || lower_desc.contains("low end")
         || lower_desc.contains("integrated gpu")
@@ -245,7 +246,8 @@ pub async fn download_shader_file(
     };
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .timeout(std::time::Duration::from_secs(300))
         .build()
         .map_err(|e| format!("Error al crear cliente HTTP: {}", e))?;
 
@@ -286,7 +288,7 @@ pub async fn download_shader_file(
         .find(|v| !v.files.is_empty())
         .ok_or_else(|| "El shader no contiene archivos descargables".to_string())?;
 
-    // Pick the primary file or first .zip file
+    // Strictly pick only .zip shader files
     let file_info = version_to_download
         .files
         .iter()
@@ -297,19 +299,19 @@ pub async fn download_shader_file(
                 .iter()
                 .find(|f| f.filename.to_lowercase().ends_with(".zip"))
         })
-        .or_else(|| version_to_download.files.first())
         .ok_or_else(|| "No se encontró ningún archivo .zip en la versión seleccionada".to_string())?;
 
     // Security sanitization on filename
     let clean_filename = file_info.filename.trim();
     if clean_filename.is_empty()
+        || !clean_filename.to_lowercase().ends_with(".zip")
         || clean_filename.contains('/')
         || clean_filename.contains('\\')
         || clean_filename.contains("..")
         || clean_filename.contains('\n')
         || clean_filename.contains('\r')
     {
-        return Err("Nombre de archivo devuelto por Modrinth es inválido o no seguro".to_string());
+        return Err("Nombre de archivo devuelto por Modrinth es inválido, no seguro o no es un .zip".to_string());
     }
 
     let shaders_dir = instance_dir.join("shaderpacks");
@@ -321,7 +323,7 @@ pub async fn download_shader_file(
     let final_dest = shaders_dir.join(clean_filename);
     let tmp_dest = shaders_dir.join(format!("{}.tmp", clean_filename));
 
-    // Stream download to temporary file
+    // Stream download to temporary file with in-flight SHA1 calculation
     let mut file_resp = client
         .get(&file_info.url)
         .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
@@ -336,26 +338,41 @@ pub async fn download_shader_file(
         ));
     }
 
-    let mut tmp_file = File::create(&tmp_dest)
-        .await
-        .map_err(|e| format!("Error al crear archivo temporal de descarga: {}", e))?;
+    let mut tmp_file = match File::create(&tmp_dest).await {
+        Ok(f) => f,
+        Err(e) => return Err(format!("Error al crear archivo temporal de descarga: {}", e)),
+    };
 
-    while let Some(chunk) = file_resp.chunk().await.map_err(|e| format!("Error durante descarga: {}", e))? {
-        tmp_file
-            .write_all(&chunk)
-            .await
-            .map_err(|e| format!("Error al escribir datos en disco: {}", e))?;
+    let mut hasher = Sha1::new();
+    let mut stream_error = None;
+
+    while let Some(chunk_res) = file_resp.chunk().await.transpose() {
+        match chunk_res {
+            Ok(chunk) => {
+                hasher.update(&chunk);
+                if let Err(e) = tmp_file.write_all(&chunk).await {
+                    stream_error = Some(format!("Error al escribir datos en disco: {}", e));
+                    break;
+                }
+            }
+            Err(e) => {
+                stream_error = Some(format!("Error de conexión durante descarga: {}", e));
+                break;
+            }
+        }
     }
-    tmp_file
-        .flush()
-        .await
-        .map_err(|e| format!("Error al vaciar búfer de archivo: {}", e))?;
+
+    if let Some(err) = stream_error {
+        let _ = fs::remove_file(&tmp_dest);
+        return Err(err);
+    }
+
+    let _ = tmp_file.flush().await;
     drop(tmp_file);
 
-    // Verify SHA1 hash
+    // Verify in-flight computed SHA1 hash
+    let actual_sha1 = format!("{:x}", hasher.finalize());
     let expected_sha1 = &file_info.hashes.sha1;
-    let actual_sha1 = calculate_sha1(&tmp_dest)
-        .map_err(|e| format!("Error al calcular hash SHA1: {}", e))?;
 
     if !actual_sha1.eq_ignore_ascii_case(expected_sha1) {
         let _ = fs::remove_file(&tmp_dest);

@@ -49,6 +49,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
     setIsSearchingOnline,
     downloadingProjects,
     setDownloadingProject,
+    markShaderInstalled,
     searchQuery,
     setSearchQuery,
     selectedTierFilter,
@@ -86,7 +87,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
 
   // Debounced search for Modrinth shaders
   useEffect(() => {
-    if (isOpen && instancePath) {
+    if (isOpen && instancePath && activeTab === 'shaders') {
       let isMounted = true;
       setIsSearchingOnline(true);
       const timer = setTimeout(() => {
@@ -103,7 +104,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
         clearTimeout(timer);
       };
     }
-  }, [isOpen, instancePath, searchQuery, onlineSortBy, searchModrinthShaders, setOnlineShaders, setIsSearchingOnline]);
+  }, [isOpen, instancePath, activeTab, searchQuery, onlineSortBy, searchModrinthShaders, setOnlineShaders, setIsSearchingOnline]);
 
   if (!isOpen) return null;
 
@@ -166,11 +167,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
         if (updated) {
           setGraphicsState(updated);
         }
-        setOnlineShaders(
-          onlineShaders.map((s) =>
-            s.project_id === shader.project_id ? { ...s, is_installed: true } : s
-          )
-        );
+        markShaderInstalled(shader.project_id);
         showFeedback(`Shader "${downloaded.filename}" descargado en shaderpacks. ¡Listo para activar!`);
       } else {
         showFeedback('Error al descargar el shaderpack de Modrinth');
@@ -771,18 +768,22 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                         >
                           <div className="flex gap-3">
                             {/* Image Thumbnail */}
-                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 border border-white/10 flex-shrink-0 relative shadow-inner">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 border border-white/10 flex-shrink-0 relative shadow-inner flex items-center justify-center">
                               {shader.featured_gallery || shader.icon_url ? (
-                                <img
-                                  src={shader.featured_gallery || shader.icon_url || ''}
-                                  alt={shader.title}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  loading="lazy"
-                                />
+                                <>
+                                  <img
+                                    src={shader.featured_gallery || shader.icon_url || ''}
+                                    alt={shader.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                  <Layers className="w-6 h-6 text-slate-600" />
+                                </>
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-slate-600">
-                                  <Layers className="w-6 h-6" />
-                                </div>
+                                <Layers className="w-6 h-6 text-slate-600" />
                               )}
                             </div>
 

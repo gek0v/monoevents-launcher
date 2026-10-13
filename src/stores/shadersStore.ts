@@ -17,6 +17,7 @@ interface ShadersState {
   setOnlineShaders: (shaders: ModrinthShaderCard[]) => void;
   setIsSearchingOnline: (isSearching: boolean) => void;
   setDownloadingProject: (projectId: string, isDownloading: boolean) => void;
+  markShaderInstalled: (projectId: string) => void;
   setSearchQuery: (query: string) => void;
   setSelectedTierFilter: (filter: 'all' | ShaderPerformanceTier) => void;
 }
@@ -42,6 +43,12 @@ export const useShadersStore = create<ShadersState>((set) => ({
         ...state.downloadingProjects,
         [projectId]: isDownloading,
       },
+    })),
+  markShaderInstalled: (projectId) =>
+    set((state) => ({
+      onlineShaders: state.onlineShaders.map((s) =>
+        s.project_id === projectId ? { ...s, is_installed: true } : s
+      ),
     })),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setSelectedTierFilter: (selectedTierFilter) => set({ selectedTierFilter }),
