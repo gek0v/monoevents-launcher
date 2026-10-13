@@ -64,6 +64,7 @@ export interface UserSettings {
   game_directory: string;
   active_account?: UserAccount;
   close_launcher_on_start: boolean;
+  enable_discord_rpc?: boolean;
 }
 
 export interface DownloadProgressEvent {
@@ -115,3 +116,38 @@ export interface CrashReportEvent {
   diagnostic?: CrashDiagnostic | null;
   tail_logs: string[];
 }
+
+export type NewsCategory = 'EVENTO' | 'ACTUALIZACIÓN' | 'REGLAS' | 'AVISO';
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  date: string;
+  author: string;
+  category: NewsCategory;
+  summary: string;
+  content: string;
+  important?: boolean;
+}
+
+export interface EventScheduleItem {
+  id: string;
+  time: string;
+  title: string;
+  description: string;
+  type: 'airdrop' | 'pvp' | 'roulette' | 'special';
+}
+
+export interface RuleCategory {
+  category: string;
+  items: string[];
+}
+
+export interface EventFeed {
+  version: string;
+  updatedAt: string;
+  articles: NewsArticle[];
+  schedule: EventScheduleItem[];
+  rules: RuleCategory[];
+}
+
