@@ -1,6 +1,8 @@
 pub mod microsoft;
 pub mod offline;
 
+pub use microsoft::DeviceCodeResponse;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

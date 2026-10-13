@@ -27,6 +27,15 @@ export interface ModpackManifest {
 
 export type AuthType = 'microsoft' | 'offline';
 
+export interface DeviceCodeResponse {
+  user_code: string;
+  device_code: string;
+  verification_uri: string;
+  expires_in: number;
+  interval: number;
+  message?: string;
+}
+
 export interface UserAccount {
   session_type: AuthType;
   username: string;

@@ -8,6 +8,7 @@ import type {
   DownloadProgressEvent,
   DeltaReport,
   ModpackManifest,
+  DeviceCodeResponse,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -296,6 +297,70 @@ export function useTauriIpc() {
     }
   }, []);
 
+  // 12. Microsoft Device Code Flow
+  const startMicrosoftLogin = useCallback(async (): Promise<DeviceCodeResponse | null> => {
+    try {
+      if (isTauriEnvironment()) {
+        return await safeInvoke<DeviceCodeResponse>('start_microsoft_device_code');
+      } else {
+        return {
+          user_code: 'DEMO-7890',
+          device_code: 'mock-device-code',
+          verification_uri: 'https://microsoft.com/link',
+          expires_in: 900,
+          interval: 5,
+          message: 'Modo navegador de prueba.',
+        };
+      }
+    } catch (err) {
+      console.error('Error al iniciar Device Code de Microsoft:', err);
+      showErrorMessage(
+        'Error de Autenticación',
+        `No se pudo iniciar la conexión con Microsoft: ${err instanceof Error ? err.message : String(err)}`
+      );
+      return null;
+    }
+  }, []);
+
+  const pollMicrosoftLogin = useCallback(
+    async (deviceCode: string): Promise<UserAccount | null> => {
+      try {
+        if (isTauriEnvironment()) {
+          return await safeInvoke<UserAccount>('poll_microsoft_device_code', { deviceCode });
+        } else {
+          await new Promise((r) => setTimeout(r, 2000));
+          return {
+            session_type: 'microsoft',
+            username: 'AlexMsaDev',
+            uuid: 'c06f8906-4c8a-4911-9c29-ea1dbd1aab82',
+            access_token: 'mock-access-token',
+          };
+        }
+      } catch (err) {
+        console.error('Error al esperar autenticación de Microsoft:', err);
+        showErrorMessage(
+          'Error de Inicio de Sesión',
+          `Fallo en la autenticación con Microsoft: ${err instanceof Error ? err.message : String(err)}`
+        );
+        return null;
+      }
+    },
+    []
+  );
+
+  const openExternalUrl = useCallback(async (url: string): Promise<void> => {
+    try {
+      if (isTauriEnvironment()) {
+        await safeInvoke('open_external_url', { url });
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {
+      console.warn('Error al abrir URL externa:', err);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }, []);
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -306,5 +371,8 @@ export function useTauriIpc() {
     getSystemMemory,
     selectGameDirectory,
     openDirectoryInExplorer,
+    openExternalUrl,
+    startMicrosoftLogin,
+    pollMicrosoftLogin,
   };
 }

@@ -238,6 +238,14 @@ pub fn build_jvm_arguments(config: &ForgeLaunchConfig) -> Vec<String> {
     args.push(config.account.uuid.clone());
     args.push("--accessToken".to_string());
     args.push(config.account.access_token.clone().unwrap_or_else(|| "0".to_string()));
+    args.push("--userType".to_string());
+    let user_type = match config.account.session_type {
+        crate::auth::SessionType::Microsoft => "msa",
+        crate::auth::SessionType::Offline => "legacy",
+    };
+    args.push(user_type.to_string());
+    args.push("--versionType".to_string());
+    args.push("Forge".to_string());
 
     args
 }
@@ -269,9 +277,42 @@ mod tests {
         assert!(args.contains(&"GekoPlayer".to_string()));
         assert!(args.contains(&"1.20.1".to_string()));
         assert!(args.contains(&"--uuid".to_string()));
+        assert!(args.contains(&"--userType".to_string()));
+        assert!(args.contains(&"legacy".to_string()));
         assert!(args.contains(&"-p".to_string()));
         assert!(args.contains(&"--launchTarget".to_string()));
         assert!(args.contains(&"forgeclient".to_string()));
         assert_eq!(session.username, "GekoPlayer");
+    }
+
+    #[test]
+    fn test_build_jvm_arguments_microsoft_account() {
+        let session = AuthSession {
+            session_type: crate::auth::SessionType::Microsoft,
+            username: "OfficialPlayer".to_string(),
+            uuid: "c06f8906-4c8a-4911-9c29-ea1dbd1aab82".to_string(),
+            access_token: Some("mc_valid_access_token_123".to_string()),
+        };
+        let java_path = PathBuf::from(r"C:\Program Files\Java\bin\java.exe");
+        let instance = PathBuf::from(r"C:\test\instances\monoevents-forge-1.20.1");
+
+        let config = ForgeLaunchConfig {
+            java_binary: &java_path,
+            ram_gb: 8,
+            instance_dir: &instance,
+            account: &session,
+            forge_version: "47.4.22",
+        };
+
+        let args = build_jvm_arguments(&config);
+
+        assert!(args.contains(&"--username".to_string()));
+        assert!(args.contains(&"OfficialPlayer".to_string()));
+        assert!(args.contains(&"--uuid".to_string()));
+        assert!(args.contains(&"c06f8906-4c8a-4911-9c29-ea1dbd1aab82".to_string()));
+        assert!(args.contains(&"--accessToken".to_string()));
+        assert!(args.contains(&"mc_valid_access_token_123".to_string()));
+        assert!(args.contains(&"--userType".to_string()));
+        assert!(args.contains(&"msa".to_string()));
     }
 }

@@ -5,13 +5,25 @@ pub mod game;
 pub mod system;
 pub mod updater;
 
-use auth::AuthSession;
+use auth::{AuthSession, DeviceCodeResponse};
 use config::{get_system_memory, load_settings, save_settings, SystemMemoryInfo, UserSettings};
 use downloader::{download_file, DownloadTask};
 use game::{ensure_instance_structure, find_system_java_17, spawn_minecraft_process, ForgeLaunchConfig};
 use std::path::PathBuf;
 use tauri::Emitter;
 use updater::{evaluate_modpack_delta, fetch_remote_manifest as fetch_manifest, DeltaReport, ModpackManifest};
+
+#[tauri::command]
+async fn start_microsoft_device_code() -> Result<DeviceCodeResponse, String> {
+    let client = reqwest::Client::new();
+    auth::microsoft::request_device_code(&client).await
+}
+
+#[tauri::command]
+async fn poll_microsoft_device_code(device_code: String) -> Result<AuthSession, String> {
+    let client = reqwest::Client::new();
+    auth::microsoft::complete_device_code_flow(&client, &device_code, 5).await
+}
 
 #[tauri::command]
 fn get_system_memory_info() -> SystemMemoryInfo {
@@ -163,7 +175,10 @@ pub fn run() {
             sync_modpack,
             launch_game,
             system::pick_game_directory,
-            system::open_directory_in_explorer
+            system::open_directory_in_explorer,
+            system::open_external_url,
+            start_microsoft_device_code,
+            poll_microsoft_device_code
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

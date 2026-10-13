@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useTauriIpc } from '../../hooks/useTauriIpc';
+import { MicrosoftDeviceCodeModal } from './MicrosoftDeviceCodeModal';
+import type { UserAccount } from '../../types/launcher';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -52,6 +54,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [accountType, setAccountType] = useState<'offline' | 'microsoft'>(
     settings.active_account?.session_type || 'offline'
   );
+  const [isMicrosoftModalOpen, setIsMicrosoftModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,6 +64,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   }, [isOpen, settings.active_account]);
 
   if (!isOpen) return null;
+
+  const handleMicrosoftSuccess = async (account: UserAccount) => {
+    setActiveAccount(account);
+    setUsernameInput(account.username);
+    setAccountType('microsoft');
+    const updated = {
+      ...useSettingsStore.getState().settings,
+      active_account: account,
+    };
+    setSettings(updated);
+    await persistSettings(updated);
+  };
 
   const handleSave = async () => {
     const trimmed = usernameInput.trim() || 'GekoPlayer';
@@ -73,11 +88,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         uuid: 'offline-uuid-' + trimmed.toLowerCase().replace(/[^a-z0-9]/g, ''),
       };
     } else {
-      updatedAccount = {
-        session_type: 'microsoft' as const,
-        username: trimmed,
-        uuid: settings.active_account?.uuid || 'ms-pending-auth',
-      };
+      updatedAccount =
+        settings.active_account?.session_type === 'microsoft'
+          ? settings.active_account
+          : {
+              session_type: 'microsoft' as const,
+              username: trimmed,
+              uuid: settings.active_account?.uuid || 'ms-pending-auth',
+            };
     }
 
     const currentSettings = useSettingsStore.getState().settings;
@@ -249,9 +267,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 />
               </div>
             ) : (
-              <p className="text-xs text-slate-400 mt-2 bg-slate-950/60 p-3 rounded-lg border border-slate-800">
-                Se iniciará sesión mediante el flujo seguro oficial de Microsoft / Xbox Live.
-              </p>
+              <div className="space-y-3 mt-2 bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+                {settings.active_account?.session_type === 'microsoft' ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                          <span>{settings.active_account.username}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          UUID: {settings.active_account.uuid}
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-bold text-emerald-400">
+                        Conectado
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMicrosoftModalOpen(true)}
+                      className="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors"
+                    >
+                      Cambiar cuenta Microsoft...
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-300">
+                      Inicia sesión con tu cuenta oficial de Minecraft (Microsoft) para autenticarte y cargar tu skin.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsMicrosoftModalOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-950/40 transition-all"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Conectar con Microsoft</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -295,6 +351,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </button>
         </div>
       </div>
+
+      {/* Microsoft Device Code Flow Modal */}
+      <MicrosoftDeviceCodeModal
+        isOpen={isMicrosoftModalOpen}
+        onClose={() => setIsMicrosoftModalOpen(false)}
+        onSuccess={handleMicrosoftSuccess}
+      />
     </div>
   );
 };
