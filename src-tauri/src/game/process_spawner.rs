@@ -34,12 +34,35 @@ pub fn spawn_minecraft_process(
 
     let args = build_jvm_arguments(config);
 
-    let mut command = Command::new(config.java_binary);
+    // On Windows, prefer javaw.exe over java.exe to avoid opening a console window
+    let java_exec: std::path::PathBuf = if cfg!(target_os = "windows") {
+        if let Some(parent) = config.java_binary.parent() {
+            let javaw = parent.join("javaw.exe");
+            if javaw.exists() {
+                javaw
+            } else {
+                config.java_binary.to_path_buf()
+            }
+        } else {
+            config.java_binary.to_path_buf()
+        }
+    } else {
+        config.java_binary.to_path_buf()
+    };
+
+    let mut command = Command::new(&java_exec);
     command
         .args(&args)
         .current_dir(config.instance_dir)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
 
     let mut child = command
         .spawn()

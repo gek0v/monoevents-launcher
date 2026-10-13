@@ -187,12 +187,18 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
 
     let pid = spawn_minecraft_process(&config, Some(app.clone()))?;
 
-    // Hide launcher window when game starts if configured (keeps Discord RPC and crash monitoring alive)
+    // If configured to close the launcher on start, hide window immediately and cleanly exit the process
+    // after a short delay so the IPC response reaches the frontend and WebView2 memory is fully released.
     if settings.close_launcher_on_start {
         use tauri::Manager;
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.hide();
         }
+        let app_handle = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            app_handle.exit(0);
+        });
     }
 
     Ok(pid)

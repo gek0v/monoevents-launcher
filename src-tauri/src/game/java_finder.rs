@@ -13,7 +13,11 @@ pub fn find_system_java_17() -> Option<PathBuf> {
     // 2. Check PATH by running 'where java.exe' on Windows
     #[cfg(target_os = "windows")]
     {
-        if let Ok(output) = Command::new("where").arg("java.exe").output() {
+        use std::os::windows::process::CommandExt;
+        let mut cmd = Command::new("where");
+        cmd.arg("java.exe");
+        cmd.creation_flags(0x08000000);
+        if let Ok(output) = cmd.output() {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 for line in stdout.lines() {
@@ -51,7 +55,14 @@ pub fn find_system_java_17() -> Option<PathBuf> {
 }
 
 fn is_java_version_17(java_path: &Path) -> bool {
-    let output = Command::new(java_path).arg("-version").output();
+    let mut cmd = Command::new(java_path);
+    cmd.arg("-version");
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000);
+    }
+    let output = cmd.output();
     match output {
         Ok(out) => {
             // java -version prints to stderr

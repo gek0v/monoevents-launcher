@@ -323,7 +323,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
             <button
               type="button"
-              onClick={() => setCloseLauncherOnStart(!settings.close_launcher_on_start)}
+              onClick={async () => {
+                const nextVal = !settings.close_launcher_on_start;
+                setCloseLauncherOnStart(nextVal);
+                const updated = { ...settings, close_launcher_on_start: nextVal };
+                await persistSettings(updated);
+              }}
               className="text-orange-400 hover:text-orange-300 transition-colors"
             >
               {settings.close_launcher_on_start ? (
@@ -344,10 +349,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const nextVal = settings.enable_discord_rpc !== false ? false : true;
                 setEnableDiscordRpc(nextVal);
                 updateDiscordRpcStatus(nextVal);
+                const updated = { ...settings, enable_discord_rpc: nextVal };
+                await persistSettings(updated);
               }}
               className="text-orange-400 hover:text-orange-300 transition-colors"
             >
