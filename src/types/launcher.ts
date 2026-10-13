@@ -53,9 +53,9 @@ export interface ServerStatus {
   online: boolean;
   host: string;
   port: number;
-  ping_ms?: number;
-  players_online?: number;
-  players_max?: number;
+  ping_ms?: number | null;
+  players_online?: number | null;
+  players_max?: number | null;
 }
 
 export interface UserSettings {

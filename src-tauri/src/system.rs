@@ -99,60 +99,176 @@ struct McStatusPlayers {
 
 #[derive(serde::Deserialize)]
 struct McStatusResponse {
+    #[serde(default)]
     online: bool,
     players: Option<McStatusPlayers>,
+}
+
+fn write_varint(buf: &mut Vec<u8>, val: i32) {
+    let mut unsigned = val as u32;
+    loop {
+        let mut temp = (unsigned & 0x7F) as u8;
+        unsigned >>= 7;
+        if unsigned != 0 {
+            temp |= 0x80;
+        }
+        buf.push(temp);
+        if unsigned == 0 {
+            break;
+        }
+    }
+}
+
+async fn read_varint<R: tokio::io::AsyncReadExt + Unpin>(reader: &mut R) -> Result<i32, String> {
+    let mut num_read = 0;
+    let mut result: u32 = 0;
+    loop {
+        let byte = reader.read_u8().await.map_err(|e| e.to_string())?;
+        let value = (byte & 0x7F) as u32;
+        result |= value << (7 * num_read);
+        num_read += 1;
+        if num_read > 5 {
+            return Err("VarInt too long".to_string());
+        }
+        if (byte & 0x80) == 0 {
+            break;
+        }
+    }
+    Ok(result as i32)
+}
+
+async fn ping_minecraft_native(host: &str, port: u16) -> Result<(u64, Option<u32>, Option<u32>), String> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpStream;
+
+    let start = std::time::Instant::now();
+    let addr = format!("{}:{}", host, port);
+
+    let mut stream = tokio::time::timeout(
+        std::time::Duration::from_millis(2000),
+        TcpStream::connect(&addr),
+    )
+    .await
+    .map_err(|_| "Timeout de conexión al servidor de Minecraft".to_string())?
+    .map_err(|e| e.to_string())?;
+
+    let ping_ms = start.elapsed().as_millis() as u64;
+
+    // Handshake packet (ID 0x00)
+    let mut body = Vec::new();
+    write_varint(&mut body, 0x00); // Packet ID
+    write_varint(&mut body, 763);  // Protocol 1.20.1
+    write_varint(&mut body, host.len() as i32);
+    body.extend_from_slice(host.as_bytes());
+    body.extend_from_slice(&port.to_be_bytes());
+    write_varint(&mut body, 1);    // Next state: 1 (Status)
+
+    let mut handshake = Vec::new();
+    write_varint(&mut handshake, body.len() as i32);
+    handshake.extend(body);
+
+    stream.write_all(&handshake).await.map_err(|e| e.to_string())?;
+
+    // Status Request packet: length 1, packet ID 0x00
+    stream.write_all(&[0x01, 0x00]).await.map_err(|e| e.to_string())?;
+
+    // Read Response
+    let _packet_len = read_varint(&mut stream).await?;
+    let packet_id = read_varint(&mut stream).await?;
+    if packet_id != 0 {
+        return Err(format!("ID de paquete de estado inválido: {}", packet_id));
+    }
+
+    let json_len = read_varint(&mut stream).await?;
+    if json_len <= 0 || json_len > 1_000_000 {
+        return Err(format!("Longitud JSON inválida: {}", json_len));
+    }
+
+    let mut json_buf = vec![0u8; json_len as usize];
+    stream.read_exact(&mut json_buf).await.map_err(|e| e.to_string())?;
+
+    let json_str = String::from_utf8(json_buf).map_err(|e| e.to_string())?;
+    let resp: McStatusResponse = serde_json::from_str(&json_str).map_err(|e| e.to_string())?;
+
+    let (online, max) = match resp.players {
+        Some(p) => (p.online, p.max),
+        None => (None, None),
+    };
+
+    Ok((ping_ms, online, max))
 }
 
 #[tauri::command]
 pub async fn check_server_status(host: String, port: Option<u16>) -> ServerStatus {
     let target_port = port.unwrap_or(25565);
-    let start = std::time::Instant::now();
 
-    // 1. Direct TCP handshake probe with 1.5s timeout
+    // 1. Direct native Minecraft Server List Ping (instantáneo, preciso con conteo de jugadores real)
+    if let Ok((ping_ms, players_online, players_max)) = ping_minecraft_native(&host, target_port).await {
+        return ServerStatus {
+            online: true,
+            host,
+            port: target_port,
+            ping_ms: Some(ping_ms),
+            players_online,
+            players_max,
+        };
+    }
+
+    // 2. Fallback: Consulta a API pública mcstatus.io con User-Agent personalizado
+    let client = reqwest::Client::builder()
+        .user_agent("MonoEventsLauncher/1.0 (Windows NT 10.0; Win64; x64)")
+        .timeout(std::time::Duration::from_millis(3000))
+        .build()
+        .unwrap_or_default();
+
+    let api_url = format!("https://api.mcstatus.io/v2/status/java/{}:{}", host, target_port);
+    if let Ok(resp) = client.get(&api_url).send().await {
+        if let Ok(info) = resp.json::<McStatusResponse>().await {
+            if info.online {
+                let (players_online, players_max) = match info.players {
+                    Some(pl) => (pl.online, pl.max),
+                    None => (None, None),
+                };
+                return ServerStatus {
+                    online: true,
+                    host,
+                    port: target_port,
+                    ping_ms: None,
+                    players_online,
+                    players_max,
+                };
+            }
+        }
+    }
+
+    // 3. Fallback final: Handshake TCP simple de conectividad
     let tcp_addr = format!("{}:{}", host, target_port);
+    let start = std::time::Instant::now();
     let tcp_probe = tokio::time::timeout(
         std::time::Duration::from_millis(1500),
         tokio::net::TcpStream::connect(&tcp_addr),
     )
     .await;
 
-    let tcp_online = matches!(tcp_probe, Ok(Ok(_)));
-    let ping_ms = if tcp_online {
-        Some(start.elapsed().as_millis() as u64)
-    } else {
-        None
-    };
-
-    // 2. Query public Minecraft status API for player metadata or fallback verification
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_millis(2000))
-        .build()
-        .unwrap_or_default();
-
-    let api_url = format!("https://api.mcstatus.io/v2/status/java/{}:{}", host, target_port);
-    let mut api_online = false;
-    let mut players_online = None;
-    let mut players_max = None;
-
-    if let Ok(resp) = client.get(&api_url).send().await {
-        if let Ok(info) = resp.json::<McStatusResponse>().await {
-            api_online = info.online;
-            if let Some(pl) = info.players {
-                players_online = pl.online;
-                players_max = pl.max;
-            }
-        }
+    if matches!(tcp_probe, Ok(Ok(_))) {
+        return ServerStatus {
+            online: true,
+            host,
+            port: target_port,
+            ping_ms: Some(start.elapsed().as_millis() as u64),
+            players_online: None,
+            players_max: None,
+        };
     }
 
-    let is_online = tcp_online || api_online;
-
+    // Servidor inaccesible
     ServerStatus {
-        online: is_online,
+        online: false,
         host,
         port: target_port,
-        ping_ms,
-        players_online,
-        players_max,
+        ping_ms: None,
+        players_online: None,
+        players_max: None,
     }
 }
 
@@ -186,5 +302,28 @@ mod tests {
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"online\":true"));
         assert!(json.contains("\"players_online\":3"));
+    }
+
+    #[tokio::test]
+    async fn test_varint_roundtrip() {
+        let test_values = [0, 1, 127, 128, 255, 25565, -1];
+        for &val in &test_values {
+            let mut buf = Vec::new();
+            write_varint(&mut buf, val);
+
+            let mut cursor = std::io::Cursor::new(buf);
+            let decoded = read_varint(&mut cursor).await.unwrap();
+            assert_eq!(decoded, val, "VarInt mismatch for value {}", val);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_check_server_status_live_minecraft() {
+        let status = check_server_status("gek0.duckdns.org".to_string(), Some(25565)).await;
+        println!("Live status returned: {:?}", status);
+        assert!(status.online);
+        assert!(status.ping_ms.is_some());
+        assert_eq!(status.players_online, Some(0));
+        assert_eq!(status.players_max, Some(20));
     }
 }

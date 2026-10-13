@@ -125,7 +125,13 @@ export default function App() {
                 ) : serverStatus.online ? (
                   <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    En Línea {serverStatus.players_online !== undefined ? `(${serverStatus.players_online} jugadores)` : ''}
+                    <span>En Línea</span>
+                    {typeof serverStatus.players_online === 'number' ? (
+                      <span className="text-emerald-300/90 font-medium">
+                        ({serverStatus.players_online}
+                        {typeof serverStatus.players_max === 'number' ? `/${serverStatus.players_max}` : ''} jugadores)
+                      </span>
+                    ) : null}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5 text-rose-400 font-semibold">
@@ -227,7 +233,13 @@ export default function App() {
                   gek0.duckdns.org
                 </span>
                 <span className="text-[11px] text-slate-400">
-                  {serverStatus?.online ? '(Servidor en línea)' : '(Servidor apagado)'}
+                  {serverStatus?.online
+                    ? typeof serverStatus.players_online === 'number'
+                      ? `(En línea • ${serverStatus.players_online}${
+                          typeof serverStatus.players_max === 'number' ? `/${serverStatus.players_max}` : ''
+                        } jugadores)`
+                      : '(En línea)'
+                    : '(Servidor apagado)'}
                 </span>
               </div>
 
