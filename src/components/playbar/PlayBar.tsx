@@ -125,7 +125,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ onPlay, onUpdate }) => {
           <button
             type="button"
             onClick={onPlay}
-            className="group relative flex items-center gap-3 px-10 py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-400 text-white font-black text-sm tracking-widest shadow-2xl shadow-orange-600/40 transition-all hover:scale-105 active:scale-95 border border-orange-300/40"
+            className="group relative flex items-center gap-3 px-10 py-3.5 rounded-xl bg-red-700 hover:bg-red-600 active:bg-red-800 text-white font-extrabold text-sm tracking-wider shadow-xl shadow-red-950/70 transition-all hover:scale-105 active:scale-95 border border-red-500/60"
           >
             <Play className="w-4 h-4 fill-current group-hover:translate-x-0.5 transition-transform" />
             <span>JUGAR</span>

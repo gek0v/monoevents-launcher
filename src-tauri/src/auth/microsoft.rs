@@ -119,11 +119,22 @@ pub fn format_uuid_hyphenated(raw_id: &str) -> String {
     }
 }
 
-pub async fn request_device_code(client: &reqwest::Client) -> Result<DeviceCodeResponse, String> {
+pub fn resolve_client_id(custom: Option<&str>) -> &str {
+    match custom {
+        Some(c) if !c.trim().is_empty() => c.trim(),
+        _ => MS_CLIENT_ID,
+    }
+}
+
+pub async fn request_device_code(
+    client: &reqwest::Client,
+    custom_client_id: Option<&str>,
+) -> Result<DeviceCodeResponse, String> {
+    let client_id = resolve_client_id(custom_client_id);
     let res = client
         .post("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode")
         .form(&[
-            ("client_id", MS_CLIENT_ID),
+            ("client_id", client_id),
             ("scope", "XboxLive.signin offline_access"),
         ])
         .send()
@@ -148,7 +159,9 @@ pub async fn poll_device_code(
     device_code: &str,
     interval_secs: u64,
     max_wait_secs: u64,
+    custom_client_id: Option<&str>,
 ) -> Result<String, String> {
+    let client_id = resolve_client_id(custom_client_id);
     let start_time = std::time::Instant::now();
     let mut poll_interval = interval_secs.max(2);
 
@@ -158,7 +171,7 @@ pub async fn poll_device_code(
         let res = client
             .post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token")
             .form(&[
-                ("client_id", MS_CLIENT_ID),
+                ("client_id", client_id),
                 ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
                 ("device_code", device_code),
             ])
@@ -342,8 +355,9 @@ pub async fn complete_device_code_flow(
     client: &reqwest::Client,
     device_code: &str,
     interval_secs: u64,
+    custom_client_id: Option<&str>,
 ) -> Result<AuthSession, String> {
-    let ms_token = poll_device_code(client, device_code, interval_secs, 900).await?;
+    let ms_token = poll_device_code(client, device_code, interval_secs, 900, custom_client_id).await?;
 
     let xbl_resp = authenticate_xbox_live(client, &ms_token).await?;
     let uhs = xbl_resp
@@ -377,6 +391,13 @@ pub async fn complete_device_code_flow(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_resolve_client_id() {
+        assert_eq!(resolve_client_id(None), MS_CLIENT_ID);
+        assert_eq!(resolve_client_id(Some("   ")), MS_CLIENT_ID);
+        assert_eq!(resolve_client_id(Some("custom-guid-123")), "custom-guid-123");
+    }
 
     #[test]
     fn test_format_uuid_hyphenated() {

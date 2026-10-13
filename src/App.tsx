@@ -20,13 +20,15 @@ import { UpdateBanner } from './components/banner/UpdateBanner';
 import { PlayBar } from './components/playbar/PlayBar';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { BackgroundRotator } from './components/background/BackgroundRotator';
+import type { ServerStatus } from './types/launcher';
 
 export default function App() {
   const { isSettingsOpen, setSettingsOpen, availableModpacks } = useLauncherStore();
   const { settings } = useSettingsStore();
-  const { checkForUpdates, startModpackSync, launchMinecraftGame } = useTauriIpc();
+  const { checkForUpdates, startModpackSync, launchMinecraftGame, checkServerStatus } = useTauriIpc();
 
   const [copiedIp, setCopiedIp] = useState(false);
+  const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
 
   const currentModpack =
     availableModpacks.find((m) => m.id === settings.selected_modpack_id) || availableModpacks[0];
@@ -44,6 +46,24 @@ export default function App() {
     }
   }, [currentModpack, settings.game_directory, checkForUpdates]);
 
+  // Real Minecraft server status ping query
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStatus = async () => {
+      const res = await checkServerStatus('gek0.duckdns.org', 25565);
+      if (isMounted) {
+        setServerStatus(res);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 45000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [checkServerStatus]);
+
   const handleUpdate = () => {
     if (currentModpack) {
       const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
@@ -59,7 +79,7 @@ export default function App() {
 
   const handleCopyIp = async () => {
     try {
-      await navigator.clipboard.writeText('play.monoevents.es');
+      await navigator.clipboard.writeText('gek0.duckdns.org');
       setCopiedIp(true);
       setTimeout(() => setCopiedIp(false), 2000);
     } catch {
@@ -80,7 +100,11 @@ export default function App() {
               <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 flex items-center justify-center font-black text-white text-lg shadow-xl shadow-orange-600/40 border border-orange-300/30">
                 M
               </div>
-              <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950" />
+              <span
+                className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-950 ${
+                  serverStatus?.online ? 'bg-emerald-400' : 'bg-rose-500'
+                }`}
+              />
             </div>
 
             <div>
@@ -93,10 +117,22 @@ export default function App() {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-slate-300">
-                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                  <Wifi className="w-3 h-3" />
-                  Servidor Online
-                </span>
+                {serverStatus === null ? (
+                  <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+                    Comprobando estado...
+                  </span>
+                ) : serverStatus.online ? (
+                  <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    En Línea {serverStatus.players_online !== undefined ? `(${serverStatus.players_online} jugadores)` : ''}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-rose-400 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    Fuera de línea
+                  </span>
+                )}
                 <span className="text-slate-600">•</span>
                 <span className="text-slate-400 font-mono">1.20.1 Forge</span>
               </div>
@@ -146,13 +182,13 @@ export default function App() {
           <div className="my-auto max-w-xl z-20 space-y-4 bg-slate-950/65 backdrop-blur-2xl border border-white/10 p-7 rounded-3xl shadow-2xl shadow-black/80 animate-fade-in">
             <div className="flex items-center gap-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm">
-                <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
-                <span>Evento Oficial de Temporada</span>
+                <Flame className="w-3.5 h-3.5 fill-current animate-pulse text-orange-400" />
+                <span>🩸 Noche de Sangre • Evento Oficial</span>
               </div>
             </div>
 
             <h2 className="text-3xl font-black text-white tracking-tight leading-tight">
-              Noche de Brujas, Ruletas & Airdrops
+              Noche de Sangre, Ruletas & Airdrops
             </h2>
 
             <p className="text-xs text-slate-300 leading-relaxed">
@@ -181,9 +217,18 @@ export default function App() {
 
             {/* Server IP Copy Box */}
             <div className="pt-2 flex items-center justify-between bg-black/40 border border-white/10 rounded-2xl px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-mono font-bold text-slate-200">play.monoevents.es</span>
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    serverStatus?.online ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+                  }`}
+                />
+                <span className="text-xs font-mono font-bold text-slate-200">
+                  gek0.duckdns.org
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {serverStatus?.online ? '(Servidor en línea)' : '(Servidor apagado)'}
+                </span>
               </div>
 
               <button

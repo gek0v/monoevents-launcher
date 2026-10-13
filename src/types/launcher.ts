@@ -49,12 +49,22 @@ export interface SystemMemoryInfo {
   recommended_ram_gb: number;
 }
 
+export interface ServerStatus {
+  online: boolean;
+  host: string;
+  port: number;
+  ping_ms?: number;
+  players_online?: number;
+  players_max?: number;
+}
+
 export interface UserSettings {
   selected_modpack_id: string;
   allocated_ram_gb: number;
   game_directory: string;
   active_account?: UserAccount;
   close_launcher_on_start: boolean;
+  custom_ms_client_id?: string;
 }
 
 export interface DownloadProgressEvent {

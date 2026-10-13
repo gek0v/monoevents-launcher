@@ -9,6 +9,7 @@ import type {
   DeltaReport,
   ModpackManifest,
   DeviceCodeResponse,
+  ServerStatus,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -361,6 +362,41 @@ export function useTauriIpc() {
     }
   }, []);
 
+  // 13. Real Minecraft Server Status Check
+  const checkServerStatus = useCallback(
+    async (host: string, port?: number): Promise<ServerStatus> => {
+      try {
+        if (isTauriEnvironment()) {
+          const res = await safeInvoke<ServerStatus>('check_server_status', { host, port });
+          if (res) return res;
+        } else {
+          // Dev mock query using mcstatus API
+          const response = await fetch(
+            `https://api.mcstatus.io/v2/status/java/${host}:${port ?? 25565}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            return {
+              online: data.online ?? false,
+              host,
+              port: port ?? 25565,
+              players_online: data.players?.online,
+              players_max: data.players?.max,
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Error checking server status:', err);
+      }
+      return {
+        online: false,
+        host,
+        port: port ?? 25565,
+      };
+    },
+    []
+  );
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -374,5 +410,6 @@ export function useTauriIpc() {
     openExternalUrl,
     startMicrosoftLogin,
     pollMicrosoftLogin,
+    checkServerStatus,
   };
 }

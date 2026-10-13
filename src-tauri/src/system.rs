@@ -81,6 +81,81 @@ pub fn open_external_url(url: String) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+pub struct ServerStatus {
+    pub online: bool,
+    pub host: String,
+    pub port: u16,
+    pub ping_ms: Option<u64>,
+    pub players_online: Option<u32>,
+    pub players_max: Option<u32>,
+}
+
+#[derive(serde::Deserialize)]
+struct McStatusPlayers {
+    online: Option<u32>,
+    max: Option<u32>,
+}
+
+#[derive(serde::Deserialize)]
+struct McStatusResponse {
+    online: bool,
+    players: Option<McStatusPlayers>,
+}
+
+#[tauri::command]
+pub async fn check_server_status(host: String, port: Option<u16>) -> ServerStatus {
+    let target_port = port.unwrap_or(25565);
+    let start = std::time::Instant::now();
+
+    // 1. Direct TCP handshake probe with 1.5s timeout
+    let tcp_addr = format!("{}:{}", host, target_port);
+    let tcp_probe = tokio::time::timeout(
+        std::time::Duration::from_millis(1500),
+        tokio::net::TcpStream::connect(&tcp_addr),
+    )
+    .await;
+
+    let tcp_online = matches!(tcp_probe, Ok(Ok(_)));
+    let ping_ms = if tcp_online {
+        Some(start.elapsed().as_millis() as u64)
+    } else {
+        None
+    };
+
+    // 2. Query public Minecraft status API for player metadata or fallback verification
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(2000))
+        .build()
+        .unwrap_or_default();
+
+    let api_url = format!("https://api.mcstatus.io/v2/status/java/{}:{}", host, target_port);
+    let mut api_online = false;
+    let mut players_online = None;
+    let mut players_max = None;
+
+    if let Ok(resp) = client.get(&api_url).send().await {
+        if let Ok(info) = resp.json::<McStatusResponse>().await {
+            api_online = info.online;
+            if let Some(pl) = info.players {
+                players_online = pl.online;
+                players_max = pl.max;
+            }
+        }
+    }
+
+    let is_online = tcp_online || api_online;
+
+    ServerStatus {
+        online: is_online,
+        host,
+        port: target_port,
+        ping_ms,
+        players_online,
+        players_max,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -96,5 +171,20 @@ mod tests {
         assert!(temp.exists());
 
         let _ = std::fs::remove_dir_all(&temp);
+    }
+
+    #[test]
+    fn test_server_status_serialization() {
+        let status = ServerStatus {
+            online: true,
+            host: "gek0.duckdns.org".to_string(),
+            port: 25565,
+            ping_ms: Some(35),
+            players_online: Some(3),
+            players_max: Some(20),
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"online\":true"));
+        assert!(json.contains("\"players_online\":3"));
     }
 }

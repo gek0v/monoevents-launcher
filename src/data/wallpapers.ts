@@ -9,7 +9,7 @@ export const SERVER_WALLPAPERS: WallpaperInfo[] = [
   {
     id: 'wp-1',
     url: '/wallpapers/wallpaper-1.png',
-    title: 'Noche de Brujas',
+    title: 'Noche de Sangre',
     description: 'Vistas panorámicas del evento MonoEvents Halloween',
   },
   {

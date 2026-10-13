@@ -9,6 +9,8 @@ pub struct UserSettings {
     pub game_directory: PathBuf,
     pub active_account: Option<AuthSession>,
     pub close_launcher_on_start: bool,
+    #[serde(default)]
+    pub custom_ms_client_id: Option<String>,
 }
 
 impl UserSettings {
@@ -33,6 +35,13 @@ impl UserSettings {
         } else {
             self.active_account = Some(AuthSession::new_offline("GekoPlayer"));
         }
+
+        if let Some(ref mut cid) = self.custom_ms_client_id {
+            *cid = cid.trim().to_string();
+            if cid.is_empty() {
+                self.custom_ms_client_id = None;
+            }
+        }
     }
 }
 
@@ -45,6 +54,7 @@ impl Default for UserSettings {
             game_directory: default_dir,
             active_account: Some(AuthSession::new_offline("GekoPlayer")),
             close_launcher_on_start: true,
+            custom_ms_client_id: None,
         }
     }
 }
@@ -69,6 +79,7 @@ mod tests {
             game_directory: PathBuf::from("test"),
             active_account: None,
             close_launcher_on_start: false,
+            custom_ms_client_id: None,
         };
 
         settings.sanitize();
