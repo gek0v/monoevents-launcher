@@ -19,7 +19,7 @@ src-tauri/gen/
 
 # Logs & Minecraft instances
 *.log
-logs/
+/logs/
 instances/
 runtime/
 cache/
