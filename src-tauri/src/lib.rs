@@ -2,15 +2,21 @@ pub mod auth;
 pub mod config;
 pub mod downloader;
 pub mod game;
+pub mod system;
 pub mod updater;
 
 use auth::AuthSession;
-use config::{load_settings, save_settings, UserSettings};
+use config::{get_system_memory, load_settings, save_settings, SystemMemoryInfo, UserSettings};
 use downloader::{download_file, DownloadTask};
 use game::{ensure_instance_structure, find_system_java_17, spawn_minecraft_process, ForgeLaunchConfig};
 use std::path::PathBuf;
 use tauri::Emitter;
 use updater::{evaluate_modpack_delta, fetch_remote_manifest as fetch_manifest, DeltaReport, ModpackManifest};
+
+#[tauri::command]
+fn get_system_memory_info() -> SystemMemoryInfo {
+    get_system_memory()
+}
 
 #[tauri::command]
 fn get_settings() -> UserSettings {
@@ -117,7 +123,7 @@ fn launch_game(app: tauri::AppHandle, modpack_id: String) -> Result<u32, String>
 
     let account = settings
         .active_account
-        .unwrap_or_else(|| AuthSession::new_offline("Jugador"));
+        .unwrap_or_else(|| AuthSession::new_offline("GekoPlayer"));
 
     let config = ForgeLaunchConfig {
         java_binary: &java_bin,
@@ -136,6 +142,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            get_system_memory_info,
             get_settings,
             save_user_settings,
             detect_java,
@@ -143,7 +150,9 @@ pub fn run() {
             fetch_remote_manifest,
             check_modpack_delta,
             sync_modpack,
-            launch_game
+            launch_game,
+            system::pick_game_directory,
+            system::open_directory_in_explorer
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

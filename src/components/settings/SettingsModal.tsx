@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   HardDrive,
@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ToggleLeft,
   ToggleRight,
+  ExternalLink,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useTauriIpc } from '../../hooks/useTauriIpc';
@@ -19,9 +20,31 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave }) => {
-  const { settings, setRam, setGameDirectory, setActiveAccount, setCloseLauncherOnStart } =
-    useSettingsStore();
-  const { createOfflineUser } = useTauriIpc();
+  const {
+    settings,
+    systemMemory,
+    setRam,
+    setGameDirectory,
+    setActiveAccount,
+    setCloseLauncherOnStart,
+    setSettings,
+  } = useSettingsStore();
+  const {
+    createOfflineUser,
+    getSystemMemory,
+    persistSettings,
+    selectGameDirectory,
+    openDirectoryInExplorer,
+  } = useTauriIpc();
+
+  useEffect(() => {
+    if (isOpen && !systemMemory) {
+      getSystemMemory();
+    }
+  }, [isOpen, systemMemory, getSystemMemory]);
+
+  const maxRam = systemMemory?.total_ram_gb ? Math.max(systemMemory.total_ram_gb, 4) : 16;
+  const recommendedRam = systemMemory?.recommended_ram_gb ?? 8;
 
   const [usernameInput, setUsernameInput] = useState(
     settings.active_account?.username || 'GekoPlayer'
@@ -30,42 +53,57 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     settings.active_account?.session_type || 'offline'
   );
 
+  useEffect(() => {
+    if (isOpen) {
+      setUsernameInput(settings.active_account?.username || 'GekoPlayer');
+      setAccountType(settings.active_account?.session_type || 'offline');
+    }
+  }, [isOpen, settings.active_account]);
+
   if (!isOpen) return null;
 
   const handleSave = async () => {
-    const trimmed = usernameInput.trim() || 'Jugador';
+    const trimmed = usernameInput.trim() || 'GekoPlayer';
+    let updatedAccount;
     if (accountType === 'offline') {
       const offlineSession = await createOfflineUser(trimmed);
-      if (offlineSession) {
-        setActiveAccount(offlineSession);
-      }
+      updatedAccount = offlineSession || {
+        session_type: 'offline' as const,
+        username: trimmed,
+        uuid: 'offline-uuid-' + trimmed.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      };
     } else {
-      setActiveAccount({
-        session_type: 'microsoft',
+      updatedAccount = {
+        session_type: 'microsoft' as const,
         username: trimmed,
         uuid: settings.active_account?.uuid || 'ms-pending-auth',
-      });
+      };
     }
+
+    const currentSettings = useSettingsStore.getState().settings;
+    const finalSettings = {
+      ...currentSettings,
+      active_account: updatedAccount,
+    };
+
+    setActiveAccount(updatedAccount);
+    setSettings(finalSettings);
+    await persistSettings(finalSettings);
+
     if (onSave) onSave();
     onClose();
   };
 
   const handlePickFolder = async () => {
-    try {
-      // Dynamic import of Tauri dialog if available
-      const dialog = await import('@tauri-apps/plugin-dialog');
-      const selected = await dialog.open({
-        directory: true,
-        multiple: false,
-        title: 'Selecciona la carpeta de instalación de Minecraft',
-      });
-      if (selected && typeof selected === 'string') {
-        setGameDirectory(selected);
-      }
-    } catch {
-      // Fallback for browser preview
-      const manual = prompt('Introduce la ruta de instalación:', settings.game_directory);
-      if (manual) setGameDirectory(manual);
+    const selected = await selectGameDirectory();
+    if (selected) {
+      setGameDirectory(selected);
+    }
+  };
+
+  const handleOpenExplorer = async () => {
+    if (settings.game_directory) {
+      await openDirectoryInExplorer(settings.game_directory);
     }
   };
 
@@ -99,25 +137,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   Memoria máxima asignada a la máquina virtual Java de Minecraft.
                 </p>
               </div>
-              <span className="text-lg font-mono font-extrabold text-orange-400 px-3 py-1 bg-orange-950/40 border border-orange-500/30 rounded-lg">
-                {settings.allocated_ram_gb} GB
-              </span>
+              <div className="flex flex-col items-end">
+                <span className="text-lg font-mono font-extrabold text-orange-400 px-3 py-1 bg-orange-950/40 border border-orange-500/30 rounded-lg">
+                  {settings.allocated_ram_gb} GB
+                </span>
+                {systemMemory && (
+                  <span className="text-[10px] text-slate-400 font-mono mt-1">
+                    Física: {systemMemory.total_ram_gb} GB ({systemMemory.available_ram_gb} GB disp.)
+                  </span>
+                )}
+              </div>
             </div>
 
             <input
               type="range"
               min={2}
-              max={16}
+              max={maxRam}
               step={1}
-              value={settings.allocated_ram_gb}
+              value={Math.min(settings.allocated_ram_gb, maxRam)}
               onChange={(e) => setRam(Number(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
             />
 
             <div className="flex justify-between text-[11px] text-slate-400 font-mono">
               <span>2 GB (Mínimo)</span>
-              <span className="text-emerald-400 font-semibold">6 - 8 GB (Recomendado Forge)</span>
-              <span>16 GB</span>
+              <span className="text-emerald-400 font-semibold">{recommendedRam} GB (Recomendado)</span>
+              <span>{maxRam} GB (Máximo Sistema)</span>
             </div>
           </div>
 
@@ -143,6 +188,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white border border-slate-700 transition-colors"
               >
                 Examinar...
+              </button>
+              <button
+                type="button"
+                title="Abrir en el Explorador de Windows"
+                onClick={handleOpenExplorer}
+                className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-orange-400" />
+                <span className="hidden sm:inline">Explorador</span>
               </button>
             </div>
           </div>

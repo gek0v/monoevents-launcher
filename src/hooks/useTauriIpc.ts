@@ -4,6 +4,7 @@ import { useLauncherStore } from '../stores/launcherStore';
 import type {
   UserSettings,
   UserAccount,
+  SystemMemoryInfo,
   DownloadProgressEvent,
   DeltaReport,
   ModpackManifest,
@@ -44,21 +45,28 @@ async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>): Promi
 }
 
 export function useTauriIpc() {
-  const { settings, setSettings } = useSettingsStore();
+  const { settings, setSettings, setSystemMemory } = useSettingsStore();
   const { setStatus, setDownloadProgress, setDeltaReport } = useLauncherStore();
 
-  // 1. Initial settings loading from Rust
+  // 1. Initial settings and system memory loading from Rust
   useEffect(() => {
     let isMounted = true;
 
     async function init() {
       try {
-        const remoteSettings = await safeInvoke<UserSettings>('get_settings');
+        const [remoteSettings, sysMem] = await Promise.all([
+          safeInvoke<UserSettings>('get_settings'),
+          safeInvoke<SystemMemoryInfo>('get_system_memory_info'),
+        ]);
+
         if (remoteSettings && isMounted) {
           setSettings(remoteSettings);
         }
+        if (sysMem && isMounted) {
+          setSystemMemory(sysMem);
+        }
       } catch (err) {
-        console.warn('Error loading settings from native backend:', err);
+        console.warn('Error loading settings or memory from native backend:', err);
       }
     }
 
@@ -66,7 +74,7 @@ export function useTauriIpc() {
     return () => {
       isMounted = false;
     };
-  }, [setSettings]);
+  }, [setSettings, setSystemMemory]);
 
   // 2. Listen to real-time download-progress and game-status events
   useEffect(() => {
@@ -255,6 +263,39 @@ export function useTauriIpc() {
     []
   );
 
+  // 9. Fetch system memory info
+  const getSystemMemory = useCallback(async (): Promise<SystemMemoryInfo | null> => {
+    try {
+      const mem = await safeInvoke<SystemMemoryInfo>('get_system_memory_info');
+      if (mem) {
+        setSystemMemory(mem);
+        return mem;
+      }
+    } catch (err) {
+      console.warn('Error fetching system memory info:', err);
+    }
+    return null;
+  }, [setSystemMemory]);
+
+  // 10. Native folder picker
+  const selectGameDirectory = useCallback(async (): Promise<string | null> => {
+    try {
+      return await safeInvoke<string | null>('pick_game_directory');
+    } catch (err) {
+      console.warn('Error al seleccionar carpeta:', err);
+      return null;
+    }
+  }, []);
+
+  // 11. Open in Windows Explorer
+  const openDirectoryInExplorer = useCallback(async (path: string): Promise<void> => {
+    try {
+      await safeInvoke('open_directory_in_explorer', { path });
+    } catch (err) {
+      console.warn('Error al abrir explorador:', err);
+    }
+  }, []);
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -262,5 +303,8 @@ export function useTauriIpc() {
     startModpackSync,
     launchMinecraftGame,
     createOfflineUser,
+    getSystemMemory,
+    selectGameDirectory,
+    openDirectoryInExplorer,
   };
 }
