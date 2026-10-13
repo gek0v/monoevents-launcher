@@ -52,6 +52,7 @@ export default function App() {
     checkForUpdates,
     startModpackSync,
     launchMinecraftGame,
+    checkGameRunning,
     checkServerStatus,
     getGraphicsState,
     openExternalUrl,
@@ -78,9 +79,10 @@ export default function App() {
   useEffect(() => {
     if (currentModpack && settings.game_directory) {
       const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+      checkGameRunning(instancePath);
       checkForUpdates(currentModpack, instancePath);
     }
-  }, [currentModpack, settings.game_directory, checkForUpdates]);
+  }, [currentModpack, settings.game_directory, checkGameRunning, checkForUpdates]);
 
   useEffect(() => {
     if (currentModpack && settings.game_directory) {
@@ -118,6 +120,7 @@ export default function App() {
 
   const handlePlay = async () => {
     if (!currentModpack || !settings.game_directory || isCheckingBeforePlay) return;
+    if (useLauncherStore.getState().status === 'RUNNING') return;
 
     setIsCheckingBeforePlay(true);
     try {

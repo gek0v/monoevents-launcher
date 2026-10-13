@@ -70,6 +70,16 @@ export function useTauriIpc() {
 
         if (remoteSettings && isMounted) {
           setSettings(remoteSettings);
+
+          // Check if Minecraft instance is already active
+          const clean = (remoteSettings.game_directory || '').replace(/[/\\]+$/, '');
+          const sep = clean.includes('\\') ? '\\' : '/';
+          const instancePath = `${clean}${sep}instances${sep}${remoteSettings.selected_modpack_id}`;
+          safeInvoke<boolean>('check_game_running', { instanceDir: instancePath }).then((isRunning) => {
+            if (isRunning && isMounted) {
+              setStatus('RUNNING');
+            }
+          });
         }
         if (sysMem && isMounted) {
           setSystemMemory(sysMem);
@@ -177,7 +187,10 @@ export function useTauriIpc() {
           if (report.action === 'UPDATE_REQUIRED') {
             setStatus('UPDATE_MODPACK_REQUIRED');
           } else {
-            setStatus('READY');
+            const currentStatus = useLauncherStore.getState().status;
+            if (currentStatus !== 'RUNNING' && currentStatus !== 'LAUNCHING') {
+              setStatus('READY');
+            }
           }
           return report;
         }
@@ -612,12 +625,35 @@ export function useTauriIpc() {
     []
   );
 
+  const checkGameRunning = useCallback(
+    async (instancePath: string): Promise<boolean> => {
+      try {
+        if (isTauriEnvironment()) {
+          const isRunning = await safeInvoke<boolean>('check_game_running', {
+            instanceDir: instancePath,
+          });
+          if (isRunning) {
+            setStatus('RUNNING');
+            return true;
+          }
+          return false;
+        }
+        return false;
+      } catch (err) {
+        console.warn('Error checking if game is running:', err);
+        return false;
+      }
+    },
+    [setStatus]
+  );
+
   return {
     persistSettings,
     fetchRemoteModpack,
     checkForUpdates,
     startModpackSync,
     launchMinecraftGame,
+    checkGameRunning,
     createOfflineUser,
     getSystemMemory,
     selectGameDirectory,

@@ -213,11 +213,52 @@ fn update_discord_rpc_status(enabled: bool) -> Result<(), String> {
     }
 }
 
-pub fn run() {
-    // Non-blocking initialization of Discord presence if enabled
-    std::thread::spawn(|| {
+#[tauri::command]
+fn check_game_running(app: tauri::AppHandle, instance_dir: String) -> Result<bool, String> {
+    let path = std::path::PathBuf::from(&instance_dir);
+    if let Some(pid) = game::process_monitor::find_running_game_process(&path) {
+        // Start watcher thread if not already running
+        game::process_monitor::watch_existing_game_process(app.clone(), pid, path);
+
+        // Update Discord RPC to in-game
         let settings = config::load_settings();
         if settings.enable_discord_rpc {
+            let _ = discord::set_activity(discord::DiscordActivityState::InGame {
+                start_timestamp: discord::rpc::current_epoch_seconds(),
+                server_ip: "gek0.duckdns.org".to_string(),
+            });
+        }
+
+        // Notify UI that the process is running
+        use tauri::Emitter;
+        let _ = app.emit(
+            "game-status",
+            game::process_monitor::ProcessEvent {
+                state: game::process_monitor::GameState::Running,
+                exit_code: None,
+                crash_report: None,
+            },
+        );
+
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+pub fn run() {
+    // Non-blocking initialization of Discord presence and running game check
+    std::thread::spawn(|| {
+        let settings = config::load_settings();
+        let instance_dir = settings.game_directory.join("instances").join(&settings.selected_modpack_id);
+        if let Some(_pid) = game::process_monitor::find_running_game_process(&instance_dir) {
+            if settings.enable_discord_rpc {
+                let _ = discord::set_activity(discord::DiscordActivityState::InGame {
+                    start_timestamp: discord::rpc::current_epoch_seconds(),
+                    server_ip: "gek0.duckdns.org".to_string(),
+                });
+            }
+        } else if settings.enable_discord_rpc {
             let _ = discord::set_activity(discord::DiscordActivityState::InLauncher);
         }
     });
@@ -236,6 +277,7 @@ pub fn run() {
             check_modpack_delta,
             sync_modpack,
             launch_game,
+            check_game_running,
             update_discord_rpc_status,
             system::pick_game_directory,
             system::open_directory_in_explorer,

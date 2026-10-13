@@ -69,6 +69,9 @@ pub fn spawn_minecraft_process(
         .map_err(|e| format!("Error al iniciar el subproceso de Java: {}", e))?;
 
     let pid = child.id();
+    let pid_file = config.instance_dir.join(".game.pid");
+    let _ = std::fs::write(&pid_file, pid.to_string());
+
     let ring_buffer = Arc::new(Mutex::new(Vec::<String>::with_capacity(200)));
 
     // Notify UI that the process is running
@@ -149,12 +152,16 @@ pub fn spawn_minecraft_process(
     // 3. Monitor child process exit in a background thread
     let handle_clone = app_handle;
     let ring_for_exit = Arc::clone(&ring_buffer);
+    let instance_dir_clone = config.instance_dir.to_path_buf();
     std::thread::spawn(move || {
         let wait_result = child.wait();
         let exit_code = match wait_result {
             Ok(status) => status.code().unwrap_or(-1),
             Err(_) => -1,
         };
+
+        let pid_file = instance_dir_clone.join(".game.pid");
+        let _ = std::fs::remove_file(&pid_file);
 
         if let Some(app) = handle_clone {
             // Restore window if it was hidden
