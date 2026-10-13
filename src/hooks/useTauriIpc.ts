@@ -409,6 +409,14 @@ export function useTauriIpc() {
     []
   );
 
+  const updateDiscordRpcStatus = useCallback(async (enabled: boolean): Promise<void> => {
+    try {
+      await safeInvoke('update_discord_rpc_status', { enabled });
+    } catch (err) {
+      console.warn('Error updating Discord RPC status:', err);
+    }
+  }, []);
+
   return {
     persistSettings,
     fetchRemoteModpack,
@@ -423,5 +431,6 @@ export function useTauriIpc() {
     startMicrosoftLogin,
     pollMicrosoftLogin,
     checkServerStatus,
+    updateDiscordRpcStatus,
   };
 }

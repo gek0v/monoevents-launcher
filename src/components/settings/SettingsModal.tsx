@@ -29,6 +29,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     setGameDirectory,
     setActiveAccount,
     setCloseLauncherOnStart,
+    setEnableDiscordRpc,
     setSettings,
   } = useSettingsStore();
   const {
@@ -37,6 +38,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     persistSettings,
     selectGameDirectory,
     openDirectoryInExplorer,
+    updateDiscordRpcStatus,
   } = useTauriIpc();
 
   useEffect(() => {
@@ -325,6 +327,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               className="text-orange-400 hover:text-orange-300 transition-colors"
             >
               {settings.close_launcher_on_start ? (
+                <ToggleRight className="w-8 h-8 text-orange-500" />
+              ) : (
+                <ToggleLeft className="w-8 h-8 text-slate-600" />
+              )}
+            </button>
+          </div>
+
+          {/* Discord Rich Presence Toggle */}
+          <div className="flex items-center justify-between px-2">
+            <div>
+              <p className="text-xs font-semibold text-slate-300">Discord Rich Presence</p>
+              <p className="text-[11px] text-slate-400">
+                Muestra tu estado y tiempo de juego en Discord automáticamente.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = settings.enable_discord_rpc !== false ? false : true;
+                setEnableDiscordRpc(nextVal);
+                updateDiscordRpcStatus(nextVal);
+              }}
+              className="text-orange-400 hover:text-orange-300 transition-colors"
+            >
+              {settings.enable_discord_rpc !== false ? (
                 <ToggleRight className="w-8 h-8 text-orange-500" />
               ) : (
                 <ToggleLeft className="w-8 h-8 text-slate-600" />

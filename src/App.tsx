@@ -12,16 +12,19 @@ import {
   ShieldCheck,
   User,
   Terminal,
+  Bell,
 } from 'lucide-react';
 import { useLauncherStore } from './stores/launcherStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { useLogsStore } from './stores/logsStore';
+import { useNewsStore } from './stores/newsStore';
 import { useTauriIpc } from './hooks/useTauriIpc';
 import { ModpackSelector } from './components/selector/ModpackSelector';
 import { UpdateBanner } from './components/banner/UpdateBanner';
 import { PlayBar } from './components/playbar/PlayBar';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { LogsModal } from './components/logs/LogsModal';
+import { EventNewsModal } from './components/news/EventNewsModal';
 import { BackgroundRotator } from './components/background/BackgroundRotator';
 import type { ServerStatus } from './types/launcher';
 
@@ -34,10 +37,16 @@ export default function App() {
     closeModal: closeLogsModal,
     lastCrash,
   } = useLogsStore();
+  const { unreadCount, fetchRemoteNews } = useNewsStore();
   const { checkForUpdates, startModpackSync, launchMinecraftGame, checkServerStatus } = useTauriIpc();
 
   const [copiedIp, setCopiedIp] = useState(false);
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchRemoteNews();
+  }, [fetchRemoteNews]);
 
   const currentModpack =
     availableModpacks.find((m) => m.id === settings.selected_modpack_id) || availableModpacks[0];
@@ -193,6 +202,21 @@ export default function App() {
               )}
             </button>
 
+            {/* Event News & Announcements Bell Button */}
+            <button
+              type="button"
+              title="Novedades, Reglas y Cronograma del Evento"
+              onClick={() => setIsNewsModalOpen(true)}
+              className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-slate-300 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-sm relative"
+            >
+              <Bell className="w-4 h-4 text-orange-400" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-md animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
             {/* Settings Button */}
             <button
               type="button"
@@ -306,6 +330,12 @@ export default function App() {
       <LogsModal
         isOpen={isLogsModalOpen}
         onClose={closeLogsModal}
+      />
+
+      {/* Event News, Rules, and Schedule Modal */}
+      <EventNewsModal
+        isOpen={isNewsModalOpen}
+        onClose={() => setIsNewsModalOpen(false)}
       />
     </div>
   );

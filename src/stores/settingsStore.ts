@@ -9,6 +9,7 @@ interface SettingsState {
   setSelectedModpackId: (selected_modpack_id: string) => void;
   setActiveAccount: (active_account: UserAccount | undefined) => void;
   setCloseLauncherOnStart: (close_launcher_on_start: boolean) => void;
+  setEnableDiscordRpc: (enable_discord_rpc: boolean) => void;
   setSettings: (settings: UserSettings) => void;
   setSystemMemory: (systemMemory: SystemMemoryInfo) => void;
 }
@@ -24,6 +25,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       uuid: 'offline-uuid-geko',
     },
     close_launcher_on_start: true,
+    enable_discord_rpc: true,
   },
   systemMemory: null,
   setRam: (allocated_ram_gb) =>
@@ -36,6 +38,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ settings: { ...state.settings, active_account } })),
   setCloseLauncherOnStart: (close_launcher_on_start) =>
     set((state) => ({ settings: { ...state.settings, close_launcher_on_start } })),
+  setEnableDiscordRpc: (enable_discord_rpc) =>
+    set((state) => ({ settings: { ...state.settings, enable_discord_rpc } })),
   setSettings: (settings) => set({ settings }),
   setSystemMemory: (systemMemory) => set({ systemMemory }),
 }));
