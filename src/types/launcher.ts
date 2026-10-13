@@ -95,3 +95,23 @@ export interface DeltaReport {
   files_to_delete: string[];
   total_download_bytes: number;
 }
+
+export type LogLevel = 'INFO' | 'WARN' | 'ERROR';
+
+export interface LogEntry {
+  level: LogLevel;
+  message: string;
+  timestamp_ms: number;
+}
+
+export interface CrashDiagnostic {
+  title: string;
+  description: string;
+  solution: string;
+}
+
+export interface CrashReportEvent {
+  exit_code: number;
+  diagnostic?: CrashDiagnostic | null;
+  tail_logs: string[];
+}
