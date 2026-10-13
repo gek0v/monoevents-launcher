@@ -18,6 +18,7 @@ import { useLauncherStore } from './stores/launcherStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { useLogsStore } from './stores/logsStore';
 import { useNewsStore } from './stores/newsStore';
+import { useShadersStore } from './stores/shadersStore';
 import { useTauriIpc } from './hooks/useTauriIpc';
 import { ModpackSelector } from './components/selector/ModpackSelector';
 import { UpdateBanner } from './components/banner/UpdateBanner';
@@ -25,6 +26,7 @@ import { PlayBar } from './components/playbar/PlayBar';
 import { SettingsModal } from './components/settings/SettingsModal';
 import { LogsModal } from './components/logs/LogsModal';
 import { EventNewsModal } from './components/news/EventNewsModal';
+import { ShadersModal } from './components/shaders/ShadersModal';
 import { BackgroundRotator } from './components/background/BackgroundRotator';
 import type { ServerStatus } from './types/launcher';
 
@@ -38,7 +40,20 @@ export default function App() {
     lastCrash,
   } = useLogsStore();
   const { unreadCount, fetchRemoteNews } = useNewsStore();
-  const { checkForUpdates, startModpackSync, launchMinecraftGame, checkServerStatus } = useTauriIpc();
+  const {
+    isModalOpen: isShadersModalOpen,
+    openModal: openShadersModal,
+    closeModal: closeShadersModal,
+    graphicsState,
+    setGraphicsState,
+  } = useShadersStore();
+  const {
+    checkForUpdates,
+    startModpackSync,
+    launchMinecraftGame,
+    checkServerStatus,
+    getGraphicsState,
+  } = useTauriIpc();
 
   const [copiedIp, setCopiedIp] = useState(false);
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
@@ -63,6 +78,15 @@ export default function App() {
       checkForUpdates(currentModpack, instancePath);
     }
   }, [currentModpack, settings.game_directory, checkForUpdates]);
+
+  useEffect(() => {
+    if (currentModpack && settings.game_directory) {
+      const instancePath = getInstancePath(settings.game_directory, currentModpack.id);
+      getGraphicsState(instancePath).then((state) => {
+        setGraphicsState(state);
+      });
+    }
+  }, [currentModpack, settings.game_directory, getGraphicsState, setGraphicsState]);
 
   // Real Minecraft server status ping query
   useEffect(() => {
@@ -183,6 +207,23 @@ export default function App() {
               <span className="max-w-[120px] truncate">
                 {settings.active_account?.username || 'GekoPlayer'}
               </span>
+            </button>
+
+            {/* Shaders & Performance Button */}
+            <button
+              type="button"
+              title="Ajustes de Rendimiento y Shaders"
+              onClick={openShadersModal}
+              className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 shadow-sm relative ${
+                graphicsState?.shaders_enabled
+                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/40 shadow-amber-500/10'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              {graphicsState?.shaders_enabled && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 border border-slate-950 shadow-sm" />
+              )}
             </button>
 
             {/* Terminal / Logs Console Button */}
@@ -337,6 +378,15 @@ export default function App() {
         isOpen={isNewsModalOpen}
         onClose={() => setIsNewsModalOpen(false)}
       />
+
+      {/* Shaders and Performance Modal */}
+      {currentModpack && (
+        <ShadersModal
+          isOpen={isShadersModalOpen}
+          onClose={closeShadersModal}
+          instancePath={getInstancePath(settings.game_directory, currentModpack.id)}
+        />
+      )}
     </div>
   );
 }
