@@ -14,6 +14,7 @@ import type {
   LogEntry,
   CrashReportEvent,
   GraphicsState,
+  GraphicsPresetType,
 } from '../types/launcher';
 
 interface ProcessEvent {
@@ -458,7 +459,18 @@ export function useTauriIpc() {
         if (isTauriEnvironment()) {
           return await safeInvoke<GraphicsState>('apply_graphics_preset', { instancePath, presetId });
         }
-        return null;
+        return {
+          active_preset: presetId as GraphicsPresetType,
+          active_shader: presetId === 'pvp' ? null : 'ComplementaryReimagined.zip',
+          shaders_enabled: presetId !== 'pvp',
+          render_distance: presetId === 'pvp' ? 8 : presetId === 'balanced' ? 12 : 16,
+          particles: presetId === 'pvp' ? 2 : presetId === 'balanced' ? 1 : 0,
+          graphics_mode: presetId === 'pvp' ? 0 : 1,
+          available_shaders: [
+            { name: 'Complementary Reimagined', filename: 'ComplementaryReimagined.zip', is_active: presetId !== 'pvp', size_mb: 4.8 },
+            { name: 'MakeUp UltraFast', filename: 'MakeUp-UltraFast.zip', is_active: false, size_mb: 2.1 },
+          ],
+        };
       } catch (err) {
         console.warn('Error al aplicar preset gráfico:', err);
         return null;

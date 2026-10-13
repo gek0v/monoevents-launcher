@@ -13,6 +13,8 @@ import {
   Sun,
   Eye,
   CheckCircle2,
+  RefreshCw,
+  Info,
 } from 'lucide-react';
 import { useShadersStore } from '../../stores/shadersStore';
 import { useTauriIpc } from '../../hooks/useTauriIpc';
@@ -61,9 +63,16 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
 
   if (!isOpen) return null;
 
+  const PRESET_NAMES: Record<GraphicsPresetType, string> = {
+    pvp: 'PVP Competitivo',
+    balanced: 'Equilibrado',
+    ultra: 'Cinemático Ultra',
+    custom: 'Personalizado',
+  };
+
   const showFeedback = (msg: string) => {
     setActionFeedback(msg);
-    setTimeout(() => setActionFeedback(null), 2500);
+    setTimeout(() => setActionFeedback(null), 3000);
   };
 
   const handleApplyPreset = async (preset: GraphicsPresetType) => {
@@ -71,7 +80,12 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
     const updated = await applyGraphicsPreset(instancePath, preset);
     if (updated) {
       setGraphicsState(updated);
-      showFeedback(`Perfil "${preset.toUpperCase()}" aplicado correctamente`);
+      const name = PRESET_NAMES[preset] || preset;
+      if (preset !== 'pvp' && updated.available_shaders.length === 0) {
+        showFeedback(`Perfil "${name}" aplicado (sin shaders instalados)`);
+      } else {
+        showFeedback(`Perfil "${name}" aplicado correctamente`);
+      }
     }
     setIsLoading(false);
   };
@@ -85,6 +99,16 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
       showFeedback(
         filename ? `Shader "${filename}" activado` : 'Shaders desactivados (OFF)'
       );
+    }
+    setIsLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    const updated = await getGraphicsState(instancePath);
+    if (updated) {
+      setGraphicsState(updated);
+      showFeedback('Lista de shaders sincronizada con disco');
     }
     setIsLoading(false);
   };
@@ -174,7 +198,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {isLoading ? (
+          {!graphicsState && isLoading ? (
             <div className="flex items-center justify-center py-24 text-slate-500 text-sm">
               <span className="animate-pulse">Cargando estado gráfico de la instancia...</span>
             </div>
@@ -375,16 +399,40 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                  {graphicsState?.shaders_enabled ? (
+                    <button
+                      onClick={() => handleToggleShader(null)}
+                      disabled={isLoading}
+                      className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 disabled:opacity-50"
+                    >
+                      Desactivar Shaders
+                    </button>
+                  ) : (graphicsState?.available_shaders?.length ?? 0) > 0 ? (
+                    <button
+                      onClick={() => handleToggleShader(graphicsState?.available_shaders[0]?.filename ?? null)}
+                      disabled={isLoading}
+                      className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-50"
+                    >
+                      Activar Shaders
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      title="Descarga o coloca un archivo .zip en shaderpacks para activarlo"
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.04] text-slate-500 border border-white/5 cursor-not-allowed"
+                    >
+                      Sin shaders instalados
+                    </button>
+                  )}
+
                   <button
-                    onClick={() => handleToggleShader(graphicsState?.shaders_enabled ? null : graphicsState?.available_shaders[0]?.filename ?? null)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                      graphicsState?.shaders_enabled
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30'
-                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
-                    }`}
+                    onClick={handleRefresh}
+                    disabled={isLoading}
+                    title="Recargar lista de shaders desde el disco"
+                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-colors disabled:opacity-50"
                   >
-                    {graphicsState?.shaders_enabled ? 'Desactivar Shaders' : 'Activar Shaders'}
+                    <RefreshCw className={`w-4 h-4 text-slate-300 ${isLoading ? 'animate-spin text-amber-400' : ''}`} />
                   </button>
 
                   <button
@@ -473,6 +521,14 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                   <span className="text-white font-medium">Complementary Reimagined</span> (iluminación nocturna inmersiva) o{' '}
                   <span className="text-white font-medium">MakeUp - UltraFast</span> (para gráficas integradas). Solo arrastra el archivo .zip a la carpeta.
                 </p>
+              </div>
+
+              {/* In-Game Hotkey Info Banner */}
+              <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/15 text-[11px] text-amber-200/80 leading-relaxed">
+                <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <span>
+                  Los cambios se aplican automáticamente antes de iniciar Minecraft. Si el juego ya está abierto, recarga los shaders pulsando <strong className="text-white">R</strong> (tecla rápida de Oculus) o recarga recursos con <strong className="text-white">F3 + T</strong>.
+                </span>
               </div>
             </div>
           )}

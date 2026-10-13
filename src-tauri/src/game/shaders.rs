@@ -38,13 +38,25 @@ pub fn parse_active_shader(content: &str) -> Option<String> {
     None
 }
 
-/// Serializes shaderpack name into Oculus `optionsshaders.txt` format.
+/// Serializes shaderpack name into Oculus `optionsshaders.txt` format with security sanitization.
 pub fn serialize_active_shader(shader: Option<&str>) -> String {
     match shader {
-        Some(name) if !name.trim().is_empty() && !name.trim().eq_ignore_ascii_case("OFF") => {
-            format!("shaderPack={}\n", name.trim())
+        Some(name) => {
+            let clean = name.trim();
+            if clean.is_empty()
+                || clean.eq_ignore_ascii_case("OFF")
+                || clean.contains('\n')
+                || clean.contains('\r')
+                || clean.contains('/')
+                || clean.contains('\\')
+                || clean.contains("..")
+            {
+                "shaderPack=OFF\n".to_string()
+            } else {
+                format!("shaderPack={}\n", clean)
+            }
         }
-        _ => "shaderPack=OFF\n".to_string(),
+        None => "shaderPack=OFF\n".to_string(),
     }
 }
 
@@ -135,6 +147,9 @@ pub fn scan_shaderpacks_dir(dir: &Path, active_shader: Option<&str>) -> Vec<Shad
             if is_zip || is_dir {
                 if let Some(filename_os) = path.file_name() {
                     let filename = filename_os.to_string_lossy().to_string();
+                    if filename.starts_with('.') {
+                        continue;
+                    }
                     let name = if is_zip {
                         filename.strip_suffix(".zip").unwrap_or(&filename).to_string()
                     } else {
@@ -192,8 +207,8 @@ pub fn get_graphics_state_internal(instance_dir: &Path) -> Result<GraphicsState,
             for line in content.lines() {
                 let trimmed = line.trim();
                 if let Some(pos) = trimmed.find(':') {
-                    let key = &trimmed[..pos];
-                    let val = &trimmed[pos + 1..];
+                    let key = trimmed[..pos].trim();
+                    let val = trimmed[pos + 1..].trim();
                     match key {
                         "renderDistance" => {
                             if let Ok(num) = val.parse::<u32>() {
@@ -219,9 +234,9 @@ pub fn get_graphics_state_internal(instance_dir: &Path) -> Result<GraphicsState,
 
     let active_preset = if !shaders_enabled && render_distance <= 8 && particles == 2 {
         Some("pvp".to_string())
-    } else if shaders_enabled && render_distance == 12 && particles == 1 {
+    } else if (shaders_enabled || available_shaders.is_empty()) && render_distance == 12 && particles == 1 {
         Some("balanced".to_string())
-    } else if shaders_enabled && render_distance >= 16 && particles == 0 {
+    } else if (shaders_enabled || available_shaders.is_empty()) && render_distance >= 16 && particles == 0 {
         Some("ultra".to_string())
     } else {
         None
@@ -301,6 +316,18 @@ pub fn set_active_shaderpack_internal(
     instance_dir: &Path,
     shader_filename: Option<&str>,
 ) -> Result<(), String> {
+    if let Some(name) = shader_filename {
+        let clean = name.trim();
+        if clean.contains('\n')
+            || clean.contains('\r')
+            || clean.contains('/')
+            || clean.contains('\\')
+            || clean.contains("..")
+        {
+            return Err("Nombre de shaderpack contiene caracteres inválidos o ruta no permitida".to_string());
+        }
+    }
+
     if !instance_dir.exists() {
         fs::create_dir_all(instance_dir)
             .map_err(|e| format!("Error al crear carpeta de instancia: {}", e))?;
@@ -414,6 +441,30 @@ mod tests {
 
         let options_shaders = fs::read_to_string(temp_dir.join("optionsshaders.txt")).unwrap();
         assert_eq!(options_shaders.trim(), "shaderPack=OFF");
+
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_shaderpack_sanitization_and_hidden_files() {
+        let temp_dir = std::env::temp_dir().join("monoevents_test_sanitization");
+        let _ = fs::remove_dir_all(&temp_dir);
+        let _ = fs::create_dir_all(&temp_dir);
+
+        // Security sanitization checks
+        assert_eq!(serialize_active_shader(Some("../malicious")), "shaderPack=OFF\n");
+        assert_eq!(serialize_active_shader(Some("injected\nshaderPack=hacked")), "shaderPack=OFF\n");
+        assert_eq!(serialize_active_shader(Some("foo/bar.zip")), "shaderPack=OFF\n");
+        assert!(set_active_shaderpack_internal(&temp_dir, Some("../exploit.zip")).is_err());
+
+        // Hidden files ignore check
+        fs::write(temp_dir.join(".DS_Store"), "dummy").unwrap();
+        fs::create_dir_all(temp_dir.join(".git")).unwrap();
+        fs::write(temp_dir.join("ValidShader.zip"), "valid").unwrap();
+
+        let scanned = scan_shaderpacks_dir(&temp_dir, None);
+        assert_eq!(scanned.len(), 1);
+        assert_eq!(scanned[0].filename, "ValidShader.zip");
 
         let _ = fs::remove_dir_all(temp_dir);
     }
