@@ -3,19 +3,19 @@
     <!-- Background Gradients -->
     <linearGradient id="bgBase" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#030712"/>
-      <stop offset="50%" stop-color="#0a0a14"/>
+      <stop offset="50%" stop-color="#0c0a1a"/>
       <stop offset="100%" stop-color="#030712"/>
     </linearGradient>
 
-    <radialGradient id="glowOrange" cx="20%" cy="30%" r="55%">
+    <radialGradient id="glowCenterOrange" cx="50%" cy="26%" r="60%">
       <stop offset="0%" stop-color="#ea580c" stop-opacity="0.45"/>
-      <stop offset="60%" stop-color="#ea580c" stop-opacity="0.08"/>
+      <stop offset="55%" stop-color="#ea580c" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#030712" stop-opacity="0"/>
     </radialGradient>
 
-    <radialGradient id="glowRose" cx="80%" cy="70%" r="50%">
-      <stop offset="0%" stop-color="#e11d48" stop-opacity="0.35"/>
-      <stop offset="60%" stop-color="#be123c" stop-opacity="0.08"/>
+    <radialGradient id="glowBottomRose" cx="50%" cy="80%" r="55%">
+      <stop offset="0%" stop-color="#e11d48" stop-opacity="0.32"/>
+      <stop offset="60%" stop-color="#991b1b" stop-opacity="0.1"/>
       <stop offset="100%" stop-color="#030712" stop-opacity="0"/>
     </radialGradient>
 
@@ -26,33 +26,34 @@
       <stop offset="100%" stop-color="#e11d48"/>
     </linearGradient>
 
-    <!-- Card Background Gradient -->
-    <linearGradient id="glassCard" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95"/>
-    </linearGradient>
-
-    <!-- Text Gradients -->
+    <!-- Title Gradient -->
     <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="50%" stop-color="#ffedd5"/>
+      <stop offset="40%" stop-color="#ffedd5"/>
       <stop offset="100%" stop-color="#f97316"/>
     </linearGradient>
 
-    <!-- Anvil Stroke -->
-    <linearGradient id="anvilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fdba74"/>
-      <stop offset="100%" stop-color="#ea580c"/>
+    <!-- Glass Card Gradient -->
+    <linearGradient id="glassCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.97"/>
+    </linearGradient>
+
+    <!-- Divider Line Gradient -->
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#f97316" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ea580c" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <!-- Base Canvas -->
+  <!-- Base Canvas Background -->
   <rect width="1024" height="576" fill="url(#bgBase)"/>
-  <rect width="1024" height="576" fill="url(#glowOrange)"/>
-  <rect width="1024" height="576" fill="url(#glowRose)"/>
+  <rect width="1024" height="576" fill="url(#glowCenterOrange)"/>
+  <rect width="1024" height="576" fill="url(#glowBottomRose)"/>
 
   <!-- Subtle Atmospheric Grid -->
-  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+  <g opacity="0.04" stroke="#ffffff" stroke-width="1">
     <line x1="0" y1="96" x2="1024" y2="96"/>
     <line x1="0" y1="192" x2="1024" y2="192"/>
     <line x1="0" y1="288" x2="1024" y2="288"/>
@@ -68,121 +69,147 @@
   </g>
 
   <!-- Outer Border Frame -->
-  <rect x="20" y="20" width="984" height="536" rx="28" fill="none" stroke="#f97316" stroke-width="1.5" stroke-opacity="0.3"/>
+  <rect x="16" y="16" width="992" height="544" rx="26" fill="none" stroke="#f97316" stroke-width="1.5" stroke-opacity="0.32"/>
 
   <!-- Floating Embers / Sparks -->
-  <circle cx="280" cy="140" r="2.5" fill="#f97316" opacity="0.8"/>
-  <circle cx="220" cy="380" r="3.5" fill="#f59e0b" opacity="0.6"/>
-  <circle cx="560" cy="110" r="2" fill="#fb7185" opacity="0.7"/>
-  <circle cx="620" cy="480" r="3" fill="#ea580c" opacity="0.8"/>
-  <circle cx="890" cy="160" r="2.5" fill="#f97316" opacity="0.9"/>
+  <circle cx="190" cy="100" r="3" fill="#f97316" opacity="0.85"/>
+  <circle cx="150" cy="330" r="4" fill="#f59e0b" opacity="0.6"/>
+  <circle cx="830" cy="110" r="3.5" fill="#fb7185" opacity="0.75"/>
+  <circle cx="870" cy="350" r="4.5" fill="#ea580c" opacity="0.7"/>
+  <circle cx="470" cy="75" r="2.5" fill="#f97316" opacity="0.9"/>
+  <circle cx="530" cy="530" r="3" fill="#f97316" opacity="0.8"/>
 
   <!-- ==============================================
-       LEFT COLUMN: MAIN BRAND & DETAILS
+       1. TOP BADGE (Centered at x=512, y=34)
        ============================================== -->
-  <g transform="translate(64, 90)">
-    <!-- Pill Badge: Evento Oficial -->
-    <rect x="0" y="0" width="220" height="30" rx="15" fill="#ea580c" fill-opacity="0.18" stroke="#f97316" stroke-width="1" stroke-opacity="0.45"/>
-    <g transform="translate(10, 6)" stroke="#fb923c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" transform="scale(0.7)"/>
+  <g transform="translate(352, 34)">
+    <rect x="0" y="0" width="320" height="36" rx="18" fill="#ea580c" fill-opacity="0.18" stroke="#f97316" stroke-width="1.2" stroke-opacity="0.5"/>
+    <g transform="translate(18, 9)" stroke="#fb923c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" transform="scale(0.85)"/>
     </g>
-    <text x="32" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#fb923c" letter-spacing="1.2">EVENTO OFICIAL DE HALLOWEEN</text>
-
-    <!-- Main Title Group with Ghost Logo -->
-    <g transform="translate(0, 52)">
-      <!-- Squircle Ghost Emblem (84x84) -->
-      <rect x="0" y="0" width="84" height="84" rx="24" fill="url(#logoGrad)" stroke="#ffedd5" stroke-width="2" stroke-opacity="0.4"/>
-      <!-- Lucide Ghost Centered inside 84x84 (scaled from 24x24: scale=2.1, translate=16.8) -->
-      <g transform="translate(16.8, 16.8) scale(2.1)" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" fill="rgba(255, 255, 255, 0.22)"/>
-        <circle cx="9" cy="10" r="1.1" fill="#ffffff" stroke="none"/>
-        <circle cx="15" cy="10" r="1.1" fill="#ffffff" stroke="none"/>
-      </g>
-
-      <!-- Text: MonoCraft -->
-      <text x="104" y="52" font-family="system-ui, sans-serif" font-size="54" font-weight="900" fill="url(#titleGrad)" letter-spacing="-1">MonoCraft</text>
-      <!-- Subtitle: Noche de Sangre -->
-      <text x="106" y="80" font-family="system-ui, sans-serif" font-size="19" font-weight="800" fill="#fb7185" letter-spacing="3.5">NOCHE DE SANGRE</text>
-    </g>
-
-    <!-- Description Paragraph -->
-    <g transform="translate(0, 175)">
-      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="14.5" fill="#cbd5e1" font-weight="500">Supervivencia extrema con ruletas de la suerte interactivas,</text>
-      <text x="0" y="24" font-family="system-ui, sans-serif" font-size="14.5" fill="#cbd5e1" font-weight="500">eventos climáticos dinámicos, airdrops y chat de voz de proximidad.</text>
-    </g>
-
-    <!-- Info Pills Row -->
-    <g transform="translate(0, 240)">
-      <!-- Pill 1: Forge 1.20.1 -->
-      <rect x="0" y="0" width="136" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
-      <g transform="translate(12, 8)" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Swords mini -->
-        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" transform="scale(0.75)"/>
-        <line x1="9.75" x2="14.25" y1="14.25" y2="9.75"/>
-      </g>
-      <text x="36" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">Forge 1.20.1</text>
-
-      <!-- Pill 2: Website -->
-      <rect x="150" y="0" width="170" height="34" rx="12" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
-      <g transform="translate(162, 8)" stroke="#f97316" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Globe mini -->
-        <circle cx="9" cy="9" r="8"/>
-        <path d="M9 1a11.6 11.6 0 0 0 0 16 11.6 11.6 0 0 0 0-16"/>
-        <path d="M1 9h16"/>
-      </g>
-      <text x="188" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">mc-gko.vercel.app</text>
-
-      <!-- Pill 3: IP Server -->
-      <rect x="334" y="0" width="170" height="34" rx="12" fill="#ea580c" fill-opacity="0.12" stroke="#ea580c" stroke-width="1" stroke-opacity="0.35"/>
-      <circle cx="350" cy="17" r="4" fill="#34d399"/>
-      <text x="364" y="22" font-family="system-ui, sans-serif" font-size="12" font-weight="800" fill="#f8fafc">gek0.duckdns.org</text>
-    </g>
+    <text x="46" y="23" font-family="system-ui, sans-serif" font-size="12.5" font-weight="800" fill="#fb923c" letter-spacing="1.5">EVENTO OFICIAL DE HALLOWEEN</text>
   </g>
 
   <!-- ==============================================
-       RIGHT COLUMN: 3 SHOWCASE CARDS (Glassmorphism)
+       2. CENTER HERO: LOGO & MONOCRAFT TITLE (Centered at x=512, y=86)
        ============================================== -->
-  <g transform="translate(670, 100)">
+  <g transform="translate(248, 86)">
+    <!-- Squircle Ghost Emblem (104x104) -->
+    <rect x="0" y="0" width="104" height="104" rx="30" fill="url(#logoGrad)" stroke="#ffedd5" stroke-width="2.5" stroke-opacity="0.45"/>
+    <!-- Lucide Ghost Centered inside 104x104: scale=2.6, translate=20.8 -->
+    <g transform="translate(20.8, 20.8) scale(2.6)" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" fill="rgba(255, 255, 255, 0.22)"/>
+      <circle cx="9" cy="10" r="1.1" fill="#ffffff" stroke="none"/>
+      <circle cx="15" cy="10" r="1.1" fill="#ffffff" stroke="none"/>
+    </g>
+
+    <!-- Text: MonoCraft Title -->
+    <text x="130" y="62" font-family="system-ui, sans-serif" font-size="68" font-weight="900" fill="url(#titleGrad)" letter-spacing="-1.5">MonoCraft</text>
+    <!-- Subtitle: Noche de Sangre -->
+    <text x="132" y="96" font-family="system-ui, sans-serif" font-size="23" font-weight="800" fill="#fb7185" letter-spacing="4.5">NOCHE DE SANGRE</text>
+  </g>
+
+  <!-- ==============================================
+       3. TAGLINE & ACCENT LINE (Centered at x=512)
+       ============================================== -->
+  <text x="512" y="222" text-anchor="middle" font-family="system-ui, sans-serif" font-size="17.5" font-weight="600" fill="#cbd5e1" letter-spacing="0.4">
+    Supervivencia Extrema • Ruleta &amp; Airdrops • Chat de Voz de Proximidad 3D
+  </text>
+
+  <!-- Glowing Divider Line -->
+  <line x1="180" y1="244" x2="844" y2="244" stroke="url(#lineGrad)" stroke-width="1.5"/>
+
+  <!-- ==============================================
+       4. 3 LARGE FEATURE CARDS (Centered row, y=266)
+       ============================================== -->
+  <g transform="translate(53, 266)">
     <!-- Card 1: Noche de Sangre (Flame) -->
     <g transform="translate(0, 0)">
-      <rect x="0" y="0" width="280" height="88" rx="20" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
-      <rect x="16" y="16" width="56" height="56" rx="16" fill="#e11d48" fill-opacity="0.15" stroke="#f43f5e" stroke-width="1" stroke-opacity="0.35"/>
+      <rect x="0" y="0" width="294" height="122" rx="22" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+      <rect x="18" y="23" width="76" height="76" rx="18" fill="#e11d48" fill-opacity="0.18" stroke="#f43f5e" stroke-width="1.2" stroke-opacity="0.4"/>
       <!-- Flame Icon -->
-      <g transform="translate(28, 28) scale(1.33)" stroke="#f43f5e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="translate(36, 41) scale(1.7)" stroke="#f43f5e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
       </g>
-      <text x="86" y="42" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Noche de Sangre</text>
-      <text x="86" y="62" font-family="system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#94a3b8">Hordas y Eventos Vivos</text>
+      <text x="108" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#ffffff">Noche de Sangre</text>
+      <text x="108" y="75" font-family="system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#94a3b8">Hordas y Eventos Vivos</text>
+      <!-- Tag Pill -->
+      <rect x="108" y="87" width="108" height="20" rx="6" fill="#e11d48" fill-opacity="0.2" stroke="#f43f5e" stroke-width="0.8" stroke-opacity="0.5"/>
+      <text x="162" y="101" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10.5" font-weight="800" fill="#fb7185" letter-spacing="0.5">EVENTO ACTIVO</text>
     </g>
 
     <!-- Card 2: Ruletas & Airdrops (Anvil) -->
-    <g transform="translate(0, 108)">
-      <rect x="0" y="0" width="280" height="88" rx="20" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
-      <rect x="16" y="16" width="56" height="56" rx="16" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.35"/>
+    <g transform="translate(312, 0)">
+      <rect x="0" y="0" width="294" height="122" rx="22" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+      <rect x="18" y="23" width="76" height="76" rx="18" fill="#f59e0b" fill-opacity="0.18" stroke="#f59e0b" stroke-width="1.2" stroke-opacity="0.4"/>
       <!-- Anvil Icon -->
-      <g transform="translate(28, 28) scale(1.33)" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="translate(36, 41) scale(1.7)" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M7 10H6a4 4 0 0 1-4-4 1 1 0 0 1 1-1h4"/>
-        <path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z" fill="rgba(245, 158, 11, 0.2)"/>
+        <path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z" fill="rgba(245, 158, 11, 0.25)"/>
         <path d="M9 12v5"/>
         <path d="M15 12v5"/>
-        <path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1" fill="rgba(245, 158, 11, 0.2)"/>
+        <path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1" fill="rgba(245, 158, 11, 0.25)"/>
       </g>
-      <text x="86" y="42" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Ruleta y Botines</text>
-      <text x="86" y="62" font-family="system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#94a3b8">Airdrops de Supervivencia</text>
+      <text x="108" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#ffffff">Ruleta &amp; Botines</text>
+      <text x="108" y="75" font-family="system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#94a3b8">Airdrops de Suministro</text>
+      <!-- Tag Pill -->
+      <rect x="108" y="87" width="112" height="20" rx="6" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.5"/>
+      <text x="164" y="101" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10.5" font-weight="800" fill="#fbbf24" letter-spacing="0.5">LOOT DINÁMICO</text>
     </g>
 
     <!-- Card 3: Chat de Voz (Microphone) -->
-    <g transform="translate(0, 216)">
-      <rect x="0" y="0" width="280" height="88" rx="20" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.1"/>
-      <rect x="16" y="16" width="56" height="56" rx="16" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="1" stroke-opacity="0.35"/>
+    <g transform="translate(624, 0)">
+      <rect x="0" y="0" width="294" height="122" rx="22" fill="url(#glassCard)" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+      <rect x="18" y="23" width="76" height="76" rx="18" fill="#10b981" fill-opacity="0.18" stroke="#10b981" stroke-width="1.2" stroke-opacity="0.4"/>
       <!-- Mic Icon -->
-      <g transform="translate(28, 28) scale(1.33)" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="translate(36, 41) scale(1.7)" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        <line x1="12" x2="12" y1="19" y2="22"/>
+        <line x1="12" y1="19" y2="22"/>
       </g>
-      <text x="86" y="42" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="#ffffff">Voz de Proximidad</text>
-      <text x="86" y="62" font-family="system-ui, sans-serif" font-size="11.5" font-weight="600" fill="#94a3b8">Chat 3D in-game nativo</text>
+      <text x="108" y="52" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#ffffff">Voz Proximidad</text>
+      <text x="108" y="75" font-family="system-ui, sans-serif" font-size="13.5" font-weight="600" fill="#94a3b8">Chat 3D Nativo in-game</text>
+      <!-- Tag Pill -->
+      <rect x="108" y="87" width="118" height="20" rx="6" fill="#10b981" fill-opacity="0.2" stroke="#10b981" stroke-width="0.8" stroke-opacity="0.5"/>
+      <text x="167" y="101" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10.5" font-weight="800" fill="#34d399" letter-spacing="0.5">AUDIO 3D IN-GAME</text>
     </g>
   </g>
+
+  <!-- ==============================================
+       5. BOTTOM CONNECTION BAR (Centered at x=512, y=414)
+       ============================================== -->
+  <g transform="translate(154, 414)">
+    <!-- Pill 1: Forge 1.20.1 (Anvil) -->
+    <rect x="0" y="0" width="180" height="46" rx="14" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.14"/>
+    <g transform="translate(16, 12) scale(0.9)" stroke="#fb923c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 10H6a4 4 0 0 1-4-4 1 1 0 0 1 1-1h4"/>
+      <path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z" fill="rgba(251, 146, 60, 0.2)"/>
+      <path d="M9 12v5"/>
+      <path d="M15 12v5"/>
+      <path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1" fill="rgba(251, 146, 60, 0.2)"/>
+    </g>
+    <text x="46" y="29" font-family="system-ui, sans-serif" font-size="14.5" font-weight="700" fill="#f8fafc">Forge 1.20.1</text>
+
+    <!-- Pill 2: Web mc-gko.vercel.app (Globe) -->
+    <rect x="198" y="0" width="250" height="46" rx="14" fill="#ffffff" fill-opacity="0.06" stroke="#ffffff" stroke-width="1" stroke-opacity="0.14"/>
+    <g transform="translate(214, 12) scale(0.95)" stroke="#60a5fa" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" x2="22" y1="12" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </g>
+    <text x="246" y="29" font-family="system-ui, sans-serif" font-size="14.5" font-weight="700" fill="#f8fafc">mc-gko.vercel.app</text>
+
+    <!-- Pill 3: IP Server gek0.duckdns.org (Live Server) -->
+    <rect x="466" y="0" width="250" height="46" rx="14" fill="#ea580c" fill-opacity="0.15" stroke="#ea580c" stroke-width="1.2" stroke-opacity="0.4"/>
+    <circle cx="486" cy="23" r="8" fill="#34d399" fill-opacity="0.25"/>
+    <circle cx="486" cy="23" r="5" fill="#34d399"/>
+    <text x="506" y="29" font-family="system-ui, sans-serif" font-size="14.5" font-weight="800" fill="#ffffff">gek0.duckdns.org</text>
+  </g>
+
+  <!-- ==============================================
+       6. BOTTOM FOOTER TAGLINE (Centered at x=512, y=508)
+       ============================================== -->
+  <text x="512" y="508" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13.5" font-weight="700" fill="#64748b" letter-spacing="1.5">
+    MONOCRAFT • LAUNCHER OFICIAL • DISCORD RICH PRESENCE
+  </text>
 </svg>
