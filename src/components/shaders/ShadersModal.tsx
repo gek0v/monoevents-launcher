@@ -168,7 +168,10 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
           setGraphicsState(updated);
         }
         markShaderInstalled(shader.project_id);
-        showFeedback(`Shader "${downloaded.filename}" descargado en shaderpacks. ¡Listo para activar!`);
+        const sizeText = downloaded.size_mb > 0
+          ? (downloaded.size_mb < 1 ? `${downloaded.size_mb} MB (${Math.round(downloaded.size_mb * 1024)} KB)` : `${downloaded.size_mb} MB`)
+          : '';
+        showFeedback(`Shader "${downloaded.filename}" (${sizeText || 'completado'}) descargado en shaderpacks. ¡Listo para activar!`);
       } else {
         showFeedback('Error al descargar el shaderpack de Modrinth');
       }
@@ -605,7 +608,7 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                               )}
                             </div>
                             <span className="text-[11px] font-mono text-slate-500">
-                              {shader.filename} • {shader.size_mb > 0 ? `${shader.size_mb} MB` : 'Carpeta'}
+                              {shader.filename} • {shader.size_mb > 0 ? (shader.size_mb < 1 ? `${shader.size_mb} MB (${Math.round(shader.size_mb * 1024)} KB)` : `${shader.size_mb} MB`) : 'Carpeta'}
                             </span>
                           </div>
                         </div>
@@ -793,9 +796,12 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                                 <h5 className="text-xs font-bold text-white truncate group-hover:text-amber-300 transition-colors">
                                   {shader.title}
                                 </h5>
-                                <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1 flex-shrink-0">
+                                <span
+                                  className="text-[10px] text-slate-400 font-mono flex items-center gap-1 flex-shrink-0"
+                                  title={`${shader.downloads.toLocaleString()} descargas totales en Modrinth`}
+                                >
                                   <Download className="w-3 h-3 text-slate-500" />
-                                  {formatDownloads(shader.downloads)}
+                                  {formatDownloads(shader.downloads)} descargas
                                 </span>
                               </div>
 
@@ -856,12 +862,17 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
                 </p>
               </div>
 
-              {/* In-Game Hotkey Info Banner */}
+              {/* In-Game Hotkey & Shader Size Info Banner */}
               <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/15 text-[11px] text-amber-200/80 leading-relaxed">
                 <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <span>
-                  Los cambios se aplican automáticamente antes de iniciar Minecraft. Si el juego ya está abierto, recarga los shaders pulsando <strong className="text-white">R</strong> (tecla rápida de Oculus) o recarga recursos con <strong className="text-white">F3 + T</strong>.
-                </span>
+                <div className="space-y-1">
+                  <p>
+                    <strong className="text-white">Sobre el tamaño de los shaders:</strong> A diferencia de los texture packs (que contienen imágenes pesadas de 50 a 300 MB), los shaders son paquetes ultraligeros de scripts y algoritmos matemáticos GLSL (ocupan habitualmente entre 500 KB y 4 MB comprimidos en <code className="text-amber-400 font-mono">.zip</code>). Cada descarga es verificada al 100% mediante hash criptográfico SHA-1 contra la CDN oficial de Modrinth.
+                  </p>
+                  <p className="text-slate-400">
+                    Los cambios se aplican automáticamente antes de iniciar el juego. Si Minecraft ya está abierto, recarga los shaders pulsando <strong className="text-white">R</strong> (tecla rápida de Oculus) o recarga recursos con <strong className="text-white">F3 + T</strong>.
+                  </p>
+                </div>
               </div>
             </div>
           )}
