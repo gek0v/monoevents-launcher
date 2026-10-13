@@ -52,6 +52,12 @@ export const EventNewsModal: React.FC<EventNewsModalProps> = ({ isOpen, onClose 
 
   const getScheduleTypeBadge = (type: string) => {
     switch (type) {
+      case 'opening':
+        return (
+          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <Flame className="w-3 h-3 text-emerald-400" /> Apertura Oficial
+          </span>
+        );
       case 'airdrop':
         return (
           <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">

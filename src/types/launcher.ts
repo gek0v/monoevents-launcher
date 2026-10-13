@@ -135,7 +135,7 @@ export interface EventScheduleItem {
   time: string;
   title: string;
   description: string;
-  type: 'airdrop' | 'pvp' | 'roulette' | 'special';
+  type: 'opening' | 'airdrop' | 'pvp' | 'roulette' | 'special';
 }
 
 export interface RuleCategory {

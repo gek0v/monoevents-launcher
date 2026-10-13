@@ -40,32 +40,11 @@ export const DEFAULT_EVENT_FEED: EventFeed = {
   ],
   schedule: [
     {
-      id: 'sched-1',
-      time: '18:00 CEST',
-      title: 'Apertura de Puertas & Reagrupamiento',
-      description: 'Acceso anticipado para exploración inicial y recolección de madera/hierro sin PVP.',
-      type: 'special',
-    },
-    {
-      id: 'sched-2',
-      time: '20:00 CEST',
-      title: 'Activación de la Noche de Sangre',
-      description: 'Comienza el PVP global en todo el mundo abierto. Cae la primera oleada de airdrops.',
-      type: 'pvp',
-    },
-    {
-      id: 'sched-3',
-      time: '22:30 CEST',
-      title: 'Ruleta de la Fortuna Sangrienta',
-      description: 'Evento comunitario en el coliseo central: sacrificios, duelos y recompensas legendarias.',
-      type: 'roulette',
-    },
-    {
-      id: 'sched-4',
-      time: '00:00 CEST',
-      title: 'Cierre de la Luna Llena & Airdrop Final',
-      description: 'Último botín supremo con equipamiento mítico y recuento de bajas.',
-      type: 'airdrop',
+      id: 'sched-apertura',
+      time: '16 Octubre • 19:00 (España)',
+      title: 'Apertura del Servidor',
+      description: 'Apertura oficial del servidor MonoCraft. Acceso disponible para todos los jugadores.',
+      type: 'opening',
     },
   ],
   rules: [
