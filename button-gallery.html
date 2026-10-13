@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galería de Botones de Jugar • MonoCraft Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #030712;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(234, 88, 12, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 90% 80%, rgba(225, 29, 72, 0.1) 0%, transparent 50%),
+        linear-gradient(to bottom, #030712 0%, #080d1a 100%);
+      color: #f3f4f6;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(249, 115, 22, 0.15);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      color: #fb923c;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 30%, #fdba74 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #9ca3af;
+      font-size: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-col;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: rgba(249, 115, 22, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(249, 115, 22, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .option-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* Simulation stage: resembles the actual dark footer of the launcher */
+    .button-stage {
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      min-height: 120px;
+      position: relative;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .button-stage::after {
+      content: 'Vista previa en barra inferior';
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-size: 9px;
+      color: #475569;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+    }
+
+    /* Base interactive button rules */
+    .btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: inherit;
+      outline: none;
+      user-select: none;
+      text-decoration: none;
+    }
+
+    /* ========================================================
+       OPCIÓN 1: Halloween Fuego Líquido (Gradiente Dinámico)
+       ======================================================== */
+    .btn-fire-gradient {
+      padding: 14px 38px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 40%, #e11d48 100%);
+      border: 1px solid rgba(255, 237, 213, 0.4);
+      box-shadow: 
+        0 10px 25px -5px rgba(234, 88, 12, 0.5),
+        0 0 15px 1px rgba(249, 115, 22, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-fire-gradient::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .btn-fire-gradient:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 
+        0 16px 30px -5px rgba(234, 88, 12, 0.65),
+        0 0 25px 3px rgba(249, 115, 22, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      filter: brightness(1.1);
+    }
+
+    .btn-fire-gradient:hover::before {
+      left: 100%;
+    }
+
+    .btn-fire-gradient:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+    }
+
+    /* ========================================================
+       OPCIÓN 2: Carmesí Sangriento & Oro (Noche de Sangre)
+       ======================================================== */
+    .btn-crimson-blood {
+      padding: 14px 40px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      color: #fff1f2;
+      background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
+      border: 1px solid #dc2626;
+      border-bottom: 2px solid #7f1d1d;
+      box-shadow: 
+        0 8px 24px -4px rgba(185, 28, 28, 0.55),
+        inset 0 1px 0 rgba(254, 205, 211, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-crimson-blood:hover {
+      background: linear-gradient(180deg, #b91c1c 0%, #5b0d0d 100%);
+      border-color: #ef4444;
+      box-shadow: 
+        0 12px 28px -4px rgba(220, 38, 38, 0.7),
+        0 0 16px rgba(239, 68, 68, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-crimson-blood:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 8px rgba(153, 27, 27, 0.5);
+    }
+
+    /* ========================================================
+       OPCIÓN 3: Táctil Minecraft 3D (Extrusión Arcade Sólida)
+       ======================================================== */
+    .btn-minecraft-3d {
+      padding: 13px 40px 17px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      background: #ea580c;
+      border: 2px solid #fdba74;
+      border-bottom: 6px solid #9a3412;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+      transition: all 0.1s ease;
+      text-transform: uppercase;
+    }
+
+    .btn-minecraft-3d:hover {
+      background: #f97316;
+      border-color: #ffedd5;
+      transform: translateY(-2px);
+      border-bottom: 8px solid #9a3412;
+      box-shadow: 0 10px 22px rgba(234, 88, 12, 0.4);
+    }
+
+    .btn-minecraft-3d:active {
+      transform: translateY(4px);
+      border-bottom: 2px solid #9a3412;
+      padding-bottom: 13px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ========================================================
+       OPCIÓN 4: Dark Obsidian & Neon Aura (Cyber Glass)
+       ======================================================== */
+    .btn-obsidian-neon {
+      padding: 13px 36px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #fed7aa;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(249, 115, 22, 0.6);
+      box-shadow: 
+        0 0 20px -3px rgba(249, 115, 22, 0.35),
+        inset 0 0 16px rgba(249, 115, 22, 0.12);
+      transition: all 0.25s ease;
+      backdrop-filter: blur(12px);
+    }
+
+    .btn-obsidian-neon:hover {
+      background: rgba(24, 24, 27, 0.95);
+      border-color: #fb923c;
+      color: #ffffff;
+      box-shadow: 
+        0 0 30px 2px rgba(249, 115, 22, 0.6),
+        inset 0 0 20px rgba(249, 115, 22, 0.25);
+      transform: scale(1.04);
+    }
+
+    .btn-obsidian-neon:active {
+      transform: scale(0.97);
+    }
+
+    /* ========================================================
+       OPCIÓN 5: Esmeralda Mítica (Clásico Minecraft Elevado)
+       ======================================================== */
+    .btn-emerald-surge {
+      padding: 14px 40px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+      background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+      border: 1px solid rgba(167, 243, 208, 0.4);
+      box-shadow: 
+        0 10px 25px -5px rgba(16, 185, 129, 0.5),
+        0 0 15px rgba(16, 185, 129, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .btn-emerald-surge:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 
+        0 16px 30px -5px rgba(16, 185, 129, 0.65),
+        0 0 25px 2px rgba(16, 185, 129, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      filter: brightness(1.1);
+    }
+
+    .btn-emerald-surge:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* ========================================================
+       OPCIÓN 6: Acción Completa con Subtítulo (Estilo Triple-A)
+       ======================================================== */
+    .btn-triple-a {
+      padding: 10px 28px;
+      border-radius: 16px;
+      color: #ffffff;
+      background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+      border: 1px solid rgba(255, 237, 213, 0.35);
+      box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.5);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-triple-a .icon-bubble {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-triple-a .text-col {
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    .btn-triple-a .primary-text {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      display: block;
+    }
+
+    .btn-triple-a .sub-text {
+      font-size: 10px;
+      font-weight: 700;
+      color: #fed7aa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .btn-triple-a:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 14px 30px -4px rgba(234, 88, 12, 0.65);
+      filter: brightness(1.08);
+    }
+
+    .btn-triple-a:hover .icon-bubble {
+      transform: scale(1.1) rotate(6deg);
+    }
+
+    .btn-triple-a:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* Common Icon SVGs */
+    .icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .select-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      background: rgba(249, 115, 22, 0.1);
+      color: #fb923c;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .select-btn:hover {
+      background: rgba(249, 115, 22, 0.2);
+      border-color: #fb923c;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      padding: 14px 24px;
+      border-radius: 16px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(249, 115, 22, 0.3);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">🔥 Selector Visual de Estilos</div>
+      <h1>Galería de Botones de JUGAR</h1>
+      <p class="subtitle">
+        Haz clic en cada botón para probar su animación, efecto sonoro y respuesta táctil. Elige el que más te guste indicándome su número o nombre.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- OPCIÓN 1 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">1. Fuego Líquido</h2>
+              <p class="card-desc">Degradado cálido Halloween con brillo dinámico y sweep de luz</p>
+            </div>
+            <span class="option-tag">#01 RECOMENDADO</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-fire-gradient" onclick="handleClick('Opción 1: Fuego Líquido')">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>JUGAR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 1: Fuego Líquido')">
+            <span>✨ Probar / Elegir Opción 1</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OPCIÓN 2 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">2. Carmesí Sangriento</h2>
+              <p class="card-desc">Rojo sangre profundo temático de la Noche de Sangre con borde neon</p>
+            </div>
+            <span class="option-tag">#02 NOCHE DE SANGRE</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-crimson-blood" onclick="handleClick('Opción 2: Carmesí Sangriento')">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>JUGAR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 2: Carmesí Sangriento')">
+            <span>🩸 Probar / Elegir Opción 2</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OPCIÓN 3 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">3. Táctil Minecraft 3D</h2>
+              <p class="card-desc">Extrusión con relieve arcade que se hunde físicamente al pulsar</p>
+            </div>
+            <span class="option-tag">#03 ARCADE 3D</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-minecraft-3d" onclick="handleClick('Opción 3: Táctil Minecraft 3D')">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>JUGAR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 3: Táctil Minecraft 3D')">
+            <span>🕹️ Probar / Elegir Opción 3</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OPCIÓN 4 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">4. Obsidian Glass Neon</h2>
+              <p class="card-desc">Cristal oscuro obsidiana con resplandor neón naranja cibernético</p>
+            </div>
+            <span class="option-tag">#04 MINIMAL GLASS</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-obsidian-neon" onclick="handleClick('Opción 4: Obsidian Glass')">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>JUGAR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 4: Obsidian Glass')">
+            <span>⚡ Probar / Elegir Opción 4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OPCIÓN 5 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">5. Esmeralda Mítica</h2>
+              <p class="card-desc">Color clásico de Minecraft reinventado con degradado y aura esmeralda</p>
+            </div>
+            <span class="option-tag">#05 MINECRAFT VERDE</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-emerald-surge" onclick="handleClick('Opción 5: Esmeralda Mítica')">
+              <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>JUGAR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 5: Esmeralda Mítica')">
+            <span>💎 Probar / Elegir Opción 5</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- OPCIÓN 6 -->
+      <div class="card">
+        <div>
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">6. Triple-A con Subtítulo</h2>
+              <p class="card-desc">Botón con burbuja de icono flotante, título destacado y versión del modpack</p>
+            </div>
+            <span class="option-tag">#06 EXPANDIDO</span>
+          </div>
+
+          <div class="button-stage">
+            <button class="btn btn-triple-a" onclick="handleClick('Opción 6: Triple-A Expandido')">
+              <div class="icon-bubble">
+                <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <div class="text-col">
+                <span class="primary-text">ENTRAR AL JUEGO</span>
+                <span class="sub-text">MonoCraft • Forge 1.20.1</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="select-btn" onclick="handleClick('Opción 6: Triple-A Expandido')">
+            <span>⚔️ Probar / Elegir Opción 6</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">
+    <span id="toast-icon">✨</span>
+    <span id="toast-text">Opción seleccionada</span>
+  </div>
+
+  <script>
+    // Sintetizador Web Audio para feedback táctil instantáneo al hacer clic
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playClickSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(420, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(140, audioCtx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    }
+
+    function handleClick(name) {
+      playClickSound();
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.innerText = `¡Has seleccionado ${name}! Pídemelo en el chat y lo aplicaré.`;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
