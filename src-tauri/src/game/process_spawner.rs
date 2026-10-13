@@ -1,6 +1,9 @@
 use std::fs::OpenOptions;
+use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, Stdio};
+use std::sync::{Arc, Mutex};
 use tauri::Emitter;
+use crate::game::diagnostics::{analyze_crash, create_log_entry, CrashReportEvent};
 use crate::game::forge_launcher::{build_jvm_arguments, ForgeLaunchConfig};
 use crate::game::process_monitor::ProcessEvent;
 
@@ -27,10 +30,7 @@ pub fn spawn_minecraft_process(
         .append(true)
         .open(&log_path)
         .map_err(|e| format!("No se pudo abrir el archivo de log: {}", e))?;
-
-    let log_err_file = log_file
-        .try_clone()
-        .map_err(|e| format!("Error al clonar handle de log: {}", e))?;
+    let log_file_arc = Arc::new(Mutex::new(log_file));
 
     let args = build_jvm_arguments(config);
 
@@ -38,14 +38,15 @@ pub fn spawn_minecraft_process(
     command
         .args(&args)
         .current_dir(config.instance_dir)
-        .stdout(Stdio::from(log_file))
-        .stderr(Stdio::from(log_err_file));
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
     let mut child = command
         .spawn()
         .map_err(|e| format!("Error al iniciar el subproceso de Java: {}", e))?;
 
     let pid = child.id();
+    let ring_buffer = Arc::new(Mutex::new(Vec::<String>::with_capacity(200)));
 
     // Notify UI that the process is running
     if let Some(ref app) = app_handle {
@@ -59,8 +60,63 @@ pub fn spawn_minecraft_process(
         );
     }
 
-    // Monitor child process exit in a background thread
+    // 1. Read stdout line by line
+    if let Some(stdout) = child.stdout.take() {
+        let app_opt = app_handle.clone();
+        let ring_clone = Arc::clone(&ring_buffer);
+        let file_clone = Arc::clone(&log_file_arc);
+        std::thread::spawn(move || {
+            let reader = BufReader::new(stdout);
+            for line_res in reader.lines() {
+                if let Ok(line) = line_res {
+                    if let Ok(mut f) = file_clone.lock() {
+                        let _ = writeln!(f, "{}", line);
+                    }
+                    if let Ok(mut buf) = ring_clone.lock() {
+                        if buf.len() >= 200 {
+                            buf.remove(0);
+                        }
+                        buf.push(line.clone());
+                    }
+                    if let Some(ref app) = app_opt {
+                        let entry = create_log_entry(line);
+                        let _ = app.emit("game-log", entry);
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Read stderr line by line
+    if let Some(stderr) = child.stderr.take() {
+        let app_opt = app_handle.clone();
+        let ring_clone = Arc::clone(&ring_buffer);
+        let file_clone = Arc::clone(&log_file_arc);
+        std::thread::spawn(move || {
+            let reader = BufReader::new(stderr);
+            for line_res in reader.lines() {
+                if let Ok(line) = line_res {
+                    if let Ok(mut f) = file_clone.lock() {
+                        let _ = writeln!(f, "{}", line);
+                    }
+                    if let Ok(mut buf) = ring_clone.lock() {
+                        if buf.len() >= 200 {
+                            buf.remove(0);
+                        }
+                        buf.push(line.clone());
+                    }
+                    if let Some(ref app) = app_opt {
+                        let entry = create_log_entry(line);
+                        let _ = app.emit("game-log", entry);
+                    }
+                }
+            }
+        });
+    }
+
+    // 3. Monitor child process exit in a background thread
     let handle_clone = app_handle;
+    let ring_for_exit = Arc::clone(&ring_buffer);
     std::thread::spawn(move || {
         let wait_result = child.wait();
         let exit_code = match wait_result {
@@ -69,20 +125,39 @@ pub fn spawn_minecraft_process(
         };
 
         if let Some(app) = handle_clone {
-            let state = if exit_code == 0 {
-                crate::game::process_monitor::GameState::Exited
-            } else {
-                crate::game::process_monitor::GameState::Crashed
-            };
+            let tail_logs = ring_for_exit
+                .lock()
+                .map(|b| b.clone())
+                .unwrap_or_default();
 
-            let _ = app.emit(
-                "game-status",
-                ProcessEvent {
-                    state,
-                    exit_code: Some(exit_code),
-                    crash_report: None,
-                },
-            );
+            if exit_code == 0 {
+                let _ = app.emit(
+                    "game-status",
+                    ProcessEvent {
+                        state: crate::game::process_monitor::GameState::Exited,
+                        exit_code: Some(0),
+                        crash_report: None,
+                    },
+                );
+                let _ = app.emit("game-stopped", 0);
+            } else {
+                let diagnostic = analyze_crash(&tail_logs, exit_code);
+                let crash_event = CrashReportEvent {
+                    exit_code,
+                    diagnostic,
+                    tail_logs,
+                };
+
+                let _ = app.emit(
+                    "game-status",
+                    ProcessEvent {
+                        state: crate::game::process_monitor::GameState::Crashed,
+                        exit_code: Some(exit_code),
+                        crash_report: None,
+                    },
+                );
+                let _ = app.emit("game-crash", crash_event);
+            }
         }
     });
 
