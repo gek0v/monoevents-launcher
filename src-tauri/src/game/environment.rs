@@ -8,6 +8,7 @@ pub fn ensure_instance_structure(instance_dir: &Path) -> Result<(), String> {
         "logs",
         "saves",
         "resourcepacks",
+        "shaderpacks",
         "natives",
     ];
 
@@ -38,6 +39,7 @@ mod tests {
         assert!(temp_dir.join("config").exists());
         assert!(temp_dir.join("logs").exists());
         assert!(temp_dir.join("resourcepacks").exists());
+        assert!(temp_dir.join("shaderpacks").exists());
         assert!(temp_dir.join("natives").exists());
 
         let _ = fs::remove_dir_all(temp_dir);
