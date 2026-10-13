@@ -582,7 +582,7 @@ export function useTauriIpc() {
         };
       } catch (err) {
         console.warn('Error al descargar shader desde Modrinth:', err);
-        return null;
+        throw err;
       }
     },
     []

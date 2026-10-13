@@ -152,7 +152,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-black tracking-wide text-white">
-                  MonoEvents
+                  MonoCraft
                 </h1>
                 <span className="text-[10px] uppercase font-extrabold tracking-widest text-orange-400 bg-orange-950/80 border border-orange-500/40 px-2 py-0.5 rounded-md">
                   Halloween

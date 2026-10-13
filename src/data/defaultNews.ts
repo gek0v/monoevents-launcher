@@ -8,7 +8,7 @@ export const DEFAULT_EVENT_FEED: EventFeed = {
       id: 'news-001',
       title: 'Airdrops Competitivos & Suministros Bélicos',
       date: '13 Octubre 2026',
-      author: 'Staff MonoEvents',
+      author: 'Staff MonoCraft',
       category: 'EVENTO',
       important: true,
       summary: 'Llegan las cajas de botín táctico en coordenadas aleatorias cada 3 horas.',

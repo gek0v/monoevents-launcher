@@ -49,8 +49,8 @@ export function formatDiscordCrashReport(payload: CrashReportPayload): string {
     .join('\n');
 
   return [
-    '**🚨 Reporte de Error - MonoEvents: Noche de Sangre**',
-    `• **Launcher:** MonoEvents ${launcherVersion} (Windows)`,
+    '**🚨 Reporte de Error - MonoCraft: Noche de Sangre**',
+    `• **Launcher:** MonoCraft ${launcherVersion} (Windows)`,
     `• **Fecha:** \`${dateStr}\``,
     `• **RAM Asignada:** ${allocatedRamGb} GB (Forge 1.20.1)`,
     `• **Código de Salida:** \`${exitCode}\``,

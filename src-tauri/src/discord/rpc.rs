@@ -82,10 +82,10 @@ impl DiscordIpcClient {
                     "pid": pid,
                     "activity": {
                         "details": "En el menú principal",
-                        "state": "MonoEvents: Noche de Sangre",
+                        "state": "MonoCraft - Halloween",
                         "assets": {
                             "large_image": "halloween",
-                            "large_text": "MonoEvents: Noche de Sangre"
+                            "large_text": "MonoCraft: Servidor Oficial"
                         }
                     }
                 },
@@ -97,13 +97,13 @@ impl DiscordIpcClient {
                     "pid": pid,
                     "activity": {
                         "details": format!("Jugando en {}", server_ip),
-                        "state": "MonoEvents: Noche de Sangre",
+                        "state": "MonoCraft - Halloween",
                         "timestamps": {
                             "start": start_timestamp
                         },
                         "assets": {
                             "large_image": "halloween",
-                            "large_text": "MonoEvents: Noche de Sangre",
+                            "large_text": "MonoCraft (Mod: Mono Events)",
                             "small_image": "forge",
                             "small_text": "Forge 1.20.1"
                         }
@@ -223,7 +223,7 @@ mod tests {
         );
         assert_eq!(
             launcher_payload["args"]["activity"]["state"],
-            "MonoEvents: Noche de Sangre"
+            "MonoCraft - Halloween"
         );
 
         let game_payload = DiscordIpcClient::build_activity_payload(&DiscordActivityState::InGame {

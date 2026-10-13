@@ -196,10 +196,11 @@ export const ShadersModal: React.FC<ShadersModalProps> = ({
           : '';
         showFeedback(`Shader "${downloaded.filename}" (${sizeText || 'completado'}) descargado en shaderpacks. ¡Listo para activar!`);
       } else {
-        showFeedback('Error al descargar el shaderpack de Modrinth');
+        showFeedback('No se pudo descargar el shaderpack seleccionado');
       }
-    } catch {
-      showFeedback('Error inesperado durante la descarga');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      showFeedback(`Error: ${msg}`);
     } finally {
       setDownloadingProject(shader.project_id, false);
     }

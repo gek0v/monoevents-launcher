@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MonoEvents Launcher",
+  "productName": "MonoCraft Launcher",
   "version": "0.1.0",
   "identifier": "com.geko.monoevents.launcher",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "MonoEvents Launcher",
+        "title": "MonoCraft Launcher",
         "width": 1024,
         "height": 640,
         "resizable": false,

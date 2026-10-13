@@ -8,7 +8,7 @@ use tokio::io::AsyncWriteExt;
 use crate::game::shaders::{scan_shaderpacks_dir, ShaderpackInfo};
 
 const MODRINTH_API_BASE: &str = "https://api.modrinth.com/v2";
-const APP_USER_AGENT: &str = "MonoEvents-Launcher/1.0.0 (contact@monoevents.es)";
+const APP_USER_AGENT: &str = "MonoCraft-Launcher/1.0.0 (contact@monocraft.es)";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModrinthSearchHit {
@@ -251,68 +251,81 @@ pub async fn download_shader_file(
         .build()
         .map_err(|e| format!("Error al crear cliente HTTP: {}", e))?;
 
+    // 1. Try querying versions specifically tagged for target_version (1.20.1)
     let version_url = format!(
         "{}/project/{}/version?game_versions=%5B%22{}%22%5D",
         MODRINTH_API_BASE, clean_project_id, target_version
     );
 
-    let version_resp = client
+    let mut versions: Vec<ModrinthVersion> = match client
         .get(&version_url)
         .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
         .send()
         .await
-        .map_err(|e| format!("Error al consultar versiones en Modrinth: {}", e))?;
+    {
+        Ok(resp) if resp.status().is_success() => resp.json().await.unwrap_or_default(),
+        _ => Vec::new(),
+    };
 
-    if !version_resp.status().is_success() {
-        return Err(format!(
-            "No se encontraron versiones para el shader (código {})",
-            version_resp.status()
-        ));
+    // 2. Fallback: If no versions specifically tagged 1.20.1 exist, query general versions
+    // (Shaders are GLSL code packs for Oculus/Embeddium and are broadly compatible across Minecraft versions)
+    if versions.is_empty() {
+        let fallback_url = format!("{}/project/{}/version", MODRINTH_API_BASE, clean_project_id);
+        if let Ok(resp) = client
+            .get(&fallback_url)
+            .header(reqwest::header::USER_AGENT, APP_USER_AGENT)
+            .send()
+            .await
+        {
+            if resp.status().is_success() {
+                versions = resp.json().await.unwrap_or_default();
+            }
+        }
     }
-
-    let versions: Vec<ModrinthVersion> = version_resp
-        .json()
-        .await
-        .map_err(|e| format!("Error al deserializar versiones de Modrinth: {}", e))?;
 
     if versions.is_empty() {
         return Err(format!(
-            "No hay versiones compatibles con Minecraft {} para este shader",
-            target_version
+            "No se encontraron versiones descargables en Modrinth para este shader"
         ));
     }
 
-    // Pick the latest version with valid files
-    let version_to_download = versions
+    // 3. Find the latest version that contains at least one valid .zip shaderpack
+    let (_version_to_download, file_info) = versions
         .iter()
-        .find(|v| !v.files.is_empty())
-        .ok_or_else(|| "El shader no contiene archivos descargables".to_string())?;
-
-    // Strictly pick only .zip shader files
-    let file_info = version_to_download
-        .files
-        .iter()
-        .find(|f| f.primary && f.filename.to_lowercase().ends_with(".zip"))
-        .or_else(|| {
-            version_to_download
+        .find_map(|v| {
+            let zip = v
                 .files
                 .iter()
-                .find(|f| f.filename.to_lowercase().ends_with(".zip"))
+                .find(|f| f.primary && f.filename.to_lowercase().ends_with(".zip"))
+                .or_else(|| {
+                    v.files
+                        .iter()
+                        .find(|f| f.filename.to_lowercase().ends_with(".zip"))
+                });
+            zip.map(|f| (v, f))
         })
-        .ok_or_else(|| "No se encontró ningún archivo .zip en la versión seleccionada".to_string())?;
+        .ok_or_else(|| "El shader no contiene ningún archivo .zip en sus versiones publicadas".to_string())?;
 
-    // Security sanitization on filename
-    let clean_filename = file_info.filename.trim();
-    if clean_filename.is_empty()
-        || !clean_filename.to_lowercase().ends_with(".zip")
-        || clean_filename.contains('/')
-        || clean_filename.contains('\\')
-        || clean_filename.contains("..")
-        || clean_filename.contains('\n')
-        || clean_filename.contains('\r')
-    {
-        return Err("Nombre de archivo devuelto por Modrinth es inválido, no seguro o no es un .zip".to_string());
+    // 4. Sanitize filename for Windows & filesystem safety
+    let raw_filename = file_info.filename.trim();
+    if raw_filename.is_empty() || raw_filename.contains("..") {
+        return Err("Nombre de archivo devuelto por Modrinth no es seguro".to_string());
     }
+
+    // Replace Windows-forbidden characters < > : " / \ | ? * and control chars with underscore
+    let sanitized_filename: String = raw_filename
+        .chars()
+        .map(|c| match c {
+            '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' | '\n' | '\r' | '\t' => '_',
+            other => other,
+        })
+        .collect();
+
+    let clean_filename = if sanitized_filename.to_lowercase().ends_with(".zip") {
+        sanitized_filename
+    } else {
+        format!("{}.zip", sanitized_filename)
+    };
 
     let shaders_dir = instance_dir.join("shaderpacks");
     if !shaders_dir.exists() {
@@ -320,7 +333,7 @@ pub async fn download_shader_file(
             .map_err(|e| format!("Error al crear carpeta shaderpacks: {}", e))?;
     }
 
-    let final_dest = shaders_dir.join(clean_filename);
+    let final_dest = shaders_dir.join(&clean_filename);
     let tmp_dest = shaders_dir.join(format!("{}.tmp", clean_filename));
 
     // Stream download to temporary file with in-flight SHA1 calculation
@@ -390,12 +403,12 @@ pub async fn download_shader_file(
     let size_mb = ((size_bytes as f64 / (1024.0 * 1024.0)) * 100.0).round() / 100.0;
     let name = clean_filename
         .strip_suffix(".zip")
-        .unwrap_or(clean_filename)
+        .unwrap_or(&clean_filename)
         .to_string();
 
     Ok(ShaderpackInfo {
         name,
-        filename: clean_filename.to_string(),
+        filename: clean_filename,
         is_active: false,
         size_mb,
     })
