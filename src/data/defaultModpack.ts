@@ -338,8 +338,8 @@ export const DEFAULT_MODPACK: ModpackManifest = {
     {
         "path":  "mods/mono_events-1.0.jar",
         "url":  "https://github.com/gek0v/monoevents-modpack/releases/download/v1.0.0/mono_events-1.0.jar",
-        "sha1":  "52a075fc3e13938633cdf33976fec032b3a3ca20",
-        "size":  4499189,
+        "sha1":  "b72d34655058fb6a70969af707d42ff84fcac23e",
+        "size":  4507306,
         "type":  "custom"
     },
     {
