@@ -29,7 +29,7 @@
     "updater": {
       "pubkey": "RWTF5919XMU2u0mV7ptp2lfQmjbmkRZlVySy581Y7ajHU8STlkCG7hhE",
       "endpoints": [
-        "https://github.com/tu-usuario/monoevents-launcher/releases/latest/download/latest.json"
+        "https://github.com/gek0v/monoevents-launcher/releases/latest/download/latest.json"
       ]
     }
   },

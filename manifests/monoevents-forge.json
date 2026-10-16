@@ -13,7 +13,7 @@
   "files": [
     {
       "path": "mods/mono_events-1.20.1.jar",
-      "url": "https://github.com/tu-usuario/monoevents-launcher/releases/download/modpack-v1.2.0/mono_events-1.20.1.jar",
+      "url": "https://github.com/gek0v/monoevents-launcher/releases/download/modpack-v1.2.0/mono_events-1.20.1.jar",
       "sha1": "e2a1b94d50c7657989345c26b5278912ef6c41b8",
       "size": 6543210,
       "type": "custom"
@@ -27,7 +27,7 @@
     },
     {
       "path": "config/mono_events.toml",
-      "url": "https://raw.githubusercontent.com/tu-usuario/monoevents-launcher/main/configs/mono_events.toml",
+      "url": "https://raw.githubusercontent.com/gek0v/monoevents-launcher/main/configs/mono_events.toml",
       "sha1": "3d9a1b4e50c7657989345c26b5278912ef6c41d0",
       "size": 4096,
       "type": "config"

@@ -63,7 +63,7 @@ export function generateManifest(
   const id = options.id || 'monocraft-halloween-1.20.1';
   const name = options.name || 'MonoCraft Halloween (1.20.1 Forge)';
   const version = options.version || '1.0.0';
-  const baseUrl = options.baseUrl || 'https://github.com/tu-usuario/monoevents-launcher/releases/download';
+  const baseUrl = options.baseUrl || 'https://github.com/gek0v/monoevents-launcher/releases/download';
   const changelog = options.changelog || 'Actualización de mods y configuraciones del servidor.';
 
   const allFiles = scanFilesRecursively(inputFolder);
